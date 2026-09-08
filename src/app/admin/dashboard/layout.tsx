@@ -11,9 +11,40 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="flex w-full min-h-[calc(100vh-92px)]">
-      {/* Sidebar */}
-      <aside className="w-64 bg-card border-r border-border p-6 hidden md:flex flex-col justify-between">
+    <div className="flex flex-col md:flex-row w-full min-h-[calc(100vh-64px)] md:min-h-[calc(100vh-92px)]">
+      {/* Mobile Top Sub-Nav Bar */}
+      <div className="md:hidden bg-card border-b border-border p-3 sticky top-16 z-30 flex items-center justify-between overflow-x-auto gap-1 text-xs">
+        <div className="flex items-center gap-1">
+          <Link href="/admin/dashboard" className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted font-medium transition-colors">
+            <LayoutDashboard className="w-3.5 h-3.5" /> Dashboard
+          </Link>
+          <Link href="/admin/dashboard/families" className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted font-medium transition-colors">
+            <Users className="w-3.5 h-3.5" /> Keluarga
+          </Link>
+          <Link href="/admin/dashboard/pending" className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted font-medium transition-colors">
+            <Clock className="w-3.5 h-3.5" /> Pending
+          </Link>
+        </div>
+        <div className="flex items-center gap-1 shrink-0 border-l border-border pl-2">
+          <Link href="/" title="Kembali ke Situs">
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground">
+              <Home className="w-3.5 h-3.5" />
+            </Button>
+          </Link>
+          <form action={async () => {
+            "use server";
+            await logoutAdmin();
+            redirect("/admin");
+          }}>
+            <Button type="submit" variant="ghost" size="icon" title="Keluar" className="h-7 w-7 text-destructive hover:bg-destructive/10">
+              <LogOut className="w-3.5 h-3.5" />
+            </Button>
+          </form>
+        </div>
+      </div>
+
+      {/* Desktop Sidebar */}
+      <aside className="w-64 bg-card border-r border-border p-6 hidden md:flex flex-col justify-between shrink-0">
         <div>
           <h2 className="text-lg font-bold text-foreground mb-6">Admin Panel</h2>
           <nav className="space-y-1">
@@ -48,7 +79,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 p-6 md:p-10 overflow-y-auto">
+      <div className="flex-1 p-4 md:p-10 overflow-y-auto">
         {children}
       </div>
     </div>

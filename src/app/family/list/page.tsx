@@ -56,27 +56,41 @@ export default async function FamilyListPage() {
   });
 
   return (
-    <div className="w-full px-6 md:px-12 xl:px-[128px] py-12">
-      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="w-full px-4 py-6 md:px-12 md:py-12 xl:px-[128px]">
+      <div className="mb-6 md:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Users className="w-6 h-6 text-primary" />
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <Users className="w-5 h-5 md:w-6 md:h-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">Data Keluarga</h1>
-            <p className="text-muted-foreground text-base mt-1">
+            <h1 className="text-2xl md:text-4xl font-bold text-foreground">Data Keluarga</h1>
+            <p className="text-muted-foreground text-xs md:text-base mt-0.5 md:mt-1">
               Daftar Kepala Keluarga dan detail anggota keluarganya.
             </p>
           </div>
         </div>
-        <Link href="/form">
-          <Button className="bg-primary text-black hover:bg-primary/85 rounded-full px-6 py-2">
+        <Link href="/form" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto bg-primary text-black hover:bg-primary/85 rounded-full px-6 py-2">
             Tambah Data
           </Button>
         </Link>
       </div>
 
-      <div className="rounded-md border border-border bg-card overflow-x-auto">
+      {/* Mobile Card List (< md) */}
+      <div className="block md:hidden space-y-3">
+        {families.length === 0 ? (
+          <div className="p-6 text-center text-muted-foreground bg-card rounded-lg border border-border text-sm">
+            Belum ada data anggota keluarga.
+          </div>
+        ) : (
+          families.map((family) => (
+            <FamilyTableRow key={family.head.id} family={family} isMobileCard />
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table (md+) */}
+      <div className="hidden md:block rounded-md border border-border bg-card overflow-x-auto">
         <table className="w-full text-sm text-left">
           <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
             <tr>

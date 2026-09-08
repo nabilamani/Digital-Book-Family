@@ -9,7 +9,7 @@ export default async function AdminPage() {
   }
 
   return (
-    <div className="w-full min-h-[calc(100vh-184px)] flex items-center justify-center px-6 py-12">
+    <div className="w-full min-h-[calc(100vh-64px)] md:min-h-[calc(100vh-184px)] flex items-center justify-center px-4 py-6 md:px-6 md:py-12">
       <AdminLoginForm />
     </div>
   );

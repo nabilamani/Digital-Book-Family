@@ -155,20 +155,20 @@ export function MultiStepForm() {
 
   return (
     <Card className="w-full max-w-3xl mx-auto bg-card border-border shadow-lg">
-      <CardHeader>
-        <div className="flex items-center justify-between mb-2">
-          <CardTitle className="text-2xl text-primary font-bold">Buku Induk Keluarga</CardTitle>
-          <span className="text-sm text-muted-foreground font-mono bg-background px-3 py-1 rounded-full border border-border">
+      <CardHeader className="p-4 md:p-6">
+        <div className="flex items-center justify-between mb-1 md:mb-2">
+          <CardTitle className="text-xl md:text-2xl text-primary font-bold">Buku Induk Keluarga</CardTitle>
+          <span className="text-xs md:text-sm text-muted-foreground font-mono bg-background px-2.5 py-0.5 md:px-3 md:py-1 rounded-full border border-border">
             Step {step} / 3
           </span>
         </div>
-        <CardDescription className="text-base">
+        <CardDescription className="text-xs md:text-base">
           {step === 1 && "Data Pribadi (Silsilah Utama)"}
           {step === 2 && "Data Istri (Pasangan)"}
           {step === 3 && "Data Anak-Anak"}
         </CardDescription>
         
-        <div className="w-full h-2 bg-background rounded-full mt-4 overflow-hidden">
+        <div className="w-full h-1.5 md:h-2 bg-background rounded-full mt-3 md:mt-4 overflow-hidden">
           <div 
             className="h-full bg-primary transition-all duration-300"
             style={{ width: `${(step / 3) * 100}%` }}
@@ -176,96 +176,97 @@ export function MultiStepForm() {
         </div>
       </CardHeader>
 
-      <CardContent className="pt-6">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <CardContent className="p-4 md:p-6 pt-2 md:pt-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
           
           {/* STEP 1: HUSBAND DATA */}
           {step === 1 && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="space-y-2 mb-6">
-                <Label htmlFor="husband_photo">Foto Profil <span className="text-destructive">*</span></Label>
-                <Input 
-                  id="husband_photo" 
-                  type="file" 
-                  accept="image/*"
-                  onChange={(e) => handlePhotoChange(e, "husband")}
-                  className="bg-background text-muted-foreground file:bg-primary file:text-black file:border-0 file:rounded-md file:px-4 file:py-1 file:mr-4 file:font-semibold"
-                />
+            <div className="space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 text-xs sm:text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4 items-end">
+                <div className="space-y-1">
+                  <Label htmlFor="husband_photo" className="text-xs font-medium">Foto Profil <span className="text-destructive">*</span></Label>
+                  <Input 
+                    id="husband_photo" 
+                    type="file" 
+                    accept="image/*"
+                    onChange={(e) => handlePhotoChange(e, "husband")}
+                    className="bg-background text-muted-foreground file:bg-primary file:text-black file:border-0 file:rounded-md file:px-2.5 file:py-0.5 file:mr-2 file:font-semibold text-xs h-9"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="husband_family_status" className="text-xs font-medium">Status Keluarga <span className="text-destructive">*</span></Label>
+                  <Input 
+                    id="husband_family_status" 
+                    placeholder="Contoh: Kepala Keluarga / Cucu" 
+                    {...form.register("husband.family_status")}
+                    className={`h-9 text-xs ${form.formState.errors.husband?.family_status ? "border-destructive" : ""}`}
+                  />
+                  {form.formState.errors.husband?.family_status && (
+                    <p className="text-[11px] text-destructive">{form.formState.errors.husband.family_status.message}</p>
+                  )}
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="husband_family_status">Status Keluarga <span className="text-destructive">*</span></Label>
-                <Input 
-                  id="husband_family_status" 
-                  placeholder="Contoh: Cucu" 
-                  {...form.register("husband.family_status")}
-                  className={form.formState.errors.husband?.family_status ? "border-destructive" : ""}
-                />
-                {form.formState.errors.husband?.family_status && (
-                  <p className="text-sm text-destructive">{form.formState.errors.husband.family_status.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="husband_name">Nama Lengkap <span className="text-destructive">*</span></Label>
+              <div className="space-y-1">
+                <Label htmlFor="husband_name" className="text-xs font-medium">Nama Lengkap <span className="text-destructive">*</span></Label>
                 <Input 
                   id="husband_name" 
                   placeholder="Nama sesuai identitas" 
                   {...form.register("husband.full_name")}
-                  className={form.formState.errors.husband?.full_name ? "border-destructive" : ""}
+                  className={`h-9 text-xs ${form.formState.errors.husband?.full_name ? "border-destructive" : ""}`}
                 />
                 {form.formState.errors.husband?.full_name && (
-                  <p className="text-sm text-destructive">{form.formState.errors.husband.full_name.message}</p>
+                  <p className="text-[11px] text-destructive">{form.formState.errors.husband.full_name.message}</p>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="husband_birth_place">Tempat Lahir</Label>
-                  <Input id="husband_birth_place" {...form.register("husband.birth_place")} />
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="husband_birth_place" className="text-xs font-medium">Tempat Lahir</Label>
+                  <Input id="husband_birth_place" className="h-9 text-xs" {...form.register("husband.birth_place")} />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="husband_birth_date">Tanggal Lahir</Label>
-                  <Input id="husband_birth_date" type="date" {...form.register("husband.birth_date")} />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="husband_education">Pendidikan</Label>
-                  <Input id="husband_education" {...form.register("husband.education")} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="husband_occupation">Pekerjaan</Label>
-                  <Input id="husband_occupation" {...form.register("husband.occupation")} />
+                <div className="space-y-1">
+                  <Label htmlFor="husband_birth_date" className="text-xs font-medium">Tanggal Lahir</Label>
+                  <Input id="husband_birth_date" type="date" className="h-9 text-xs" {...form.register("husband.birth_date")} />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="husband_phone">No. Telp/HP</Label>
-                  <Input id="husband_phone" {...form.register("husband.phone")} />
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="husband_education" className="text-xs font-medium">Pendidikan</Label>
+                  <Input id="husband_education" className="h-9 text-xs" {...form.register("husband.education")} />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="husband_email">E-mail</Label>
-                  <Input id="husband_email" type="email" {...form.register("husband.email")} />
+                <div className="space-y-1">
+                  <Label htmlFor="husband_occupation" className="text-xs font-medium">Pekerjaan</Label>
+                  <Input id="husband_occupation" className="h-9 text-xs" {...form.register("husband.occupation")} />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="husband_address">Alamat Rumah</Label>
-                <Input id="husband_address" {...form.register("husband.address")} />
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="husband_phone" className="text-xs font-medium">No. Telp/HP</Label>
+                  <Input id="husband_phone" className="h-9 text-xs" {...form.register("husband.phone")} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="husband_email" className="text-xs font-medium">E-mail</Label>
+                  <Input id="husband_email" type="email" className="h-9 text-xs" {...form.register("husband.email")} />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="husband_address" className="text-xs font-medium">Alamat Rumah</Label>
+                <Input id="husband_address" className="h-9 text-xs" {...form.register("husband.address")} />
               </div>
             </div>
           )}
 
           {/* STEP 2: WIFE DATA */}
           {step === 2 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex items-center justify-between border border-border p-4 rounded-lg bg-background">
+            <div className="space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 text-xs sm:text-sm">
+              <div className="flex items-center justify-between border border-border p-3 rounded-lg bg-background">
                 <div className="space-y-0.5">
-                  <Label className="text-base">Data Istri</Label>
-                  <p className="text-sm text-muted-foreground">Aktifkan jika memiliki data istri untuk dimasukkan.</p>
+                  <Label className="text-sm font-medium">Data Istri</Label>
+                  <p className="text-[11px] text-muted-foreground">Aktifkan jika memiliki data istri untuk dimasukkan.</p>
                 </div>
                 <Switch 
                   checked={hasWife}
@@ -274,83 +275,84 @@ export function MultiStepForm() {
               </div>
 
               {hasWife && (
-                <div className="space-y-4 pt-4 border-t border-border">
-                  <div className="space-y-2 mb-6">
-                    <Label htmlFor="wife_photo">Foto Profil <span className="text-destructive">*</span></Label>
-                    <Input 
-                      id="wife_photo" 
-                      type="file" 
-                      accept="image/*"
-                      onChange={(e) => handlePhotoChange(e, "wife")}
-                      className="bg-background text-muted-foreground file:bg-primary file:text-black file:border-0 file:rounded-md file:px-4 file:py-1 file:mr-4 file:font-semibold"
-                    />
+                <div className="space-y-3 pt-2 border-t border-border">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4 items-end">
+                    <div className="space-y-1">
+                      <Label htmlFor="wife_photo" className="text-xs font-medium">Foto Profil <span className="text-destructive">*</span></Label>
+                      <Input 
+                        id="wife_photo" 
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => handlePhotoChange(e, "wife")}
+                        className="bg-background text-muted-foreground file:bg-primary file:text-black file:border-0 file:rounded-md file:px-2.5 file:py-0.5 file:mr-2 file:font-semibold text-xs h-9"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="wife_family_status" className="text-xs font-medium">Status Keluarga</Label>
+                      <Input id="wife_family_status" className="h-9 text-xs" placeholder="Contoh: Cucu Menantu" {...form.register("wife.family_status")} />
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="wife_name">Nama Lengkap <span className="text-destructive">*</span></Label>
+                  <div className="space-y-1">
+                    <Label htmlFor="wife_name" className="text-xs font-medium">Nama Lengkap <span className="text-destructive">*</span></Label>
                     <Input 
                       id="wife_name" 
+                      className={`h-9 text-xs ${form.formState.errors.wife?.full_name ? "border-destructive" : ""}`}
                       {...form.register("wife.full_name")}
-                      className={form.formState.errors.wife?.full_name ? "border-destructive" : ""}
                     />
                     {form.formState.errors.wife?.full_name && (
-                      <p className="text-sm text-destructive">{form.formState.errors.wife.full_name.message}</p>
+                      <p className="text-[11px] text-destructive">{form.formState.errors.wife.full_name.message}</p>
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="wife_family_status">Status Keluarga</Label>
-                    <Input id="wife_family_status" placeholder="Contoh: Cucu Menantu" {...form.register("wife.family_status")} />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="wife_birth_place">Tempat Lahir</Label>
-                      <Input id="wife_birth_place" {...form.register("wife.birth_place")} />
+                  <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
+                    <div className="space-y-1">
+                      <Label htmlFor="wife_birth_place" className="text-xs font-medium">Tempat Lahir</Label>
+                      <Input id="wife_birth_place" className="h-9 text-xs" {...form.register("wife.birth_place")} />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="wife_birth_date">Tanggal Lahir</Label>
-                      <Input id="wife_birth_date" type="date" {...form.register("wife.birth_date")} />
+                    <div className="space-y-1">
+                      <Label htmlFor="wife_birth_date" className="text-xs font-medium">Tanggal Lahir</Label>
+                      <Input id="wife_birth_date" type="date" className="h-9 text-xs" {...form.register("wife.birth_date")} />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="wife_education">Pendidikan</Label>
-                      <Input id="wife_education" {...form.register("wife.education")} />
+                  <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
+                    <div className="space-y-1">
+                      <Label htmlFor="wife_education" className="text-xs font-medium">Pendidikan</Label>
+                      <Input id="wife_education" className="h-9 text-xs" {...form.register("wife.education")} />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="wife_occupation">Pekerjaan</Label>
-                      <Input id="wife_occupation" {...form.register("wife.occupation")} />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="wife_phone">No. Telp/HP</Label>
-                      <Input id="wife_phone" {...form.register("wife.phone")} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="wife_email">E-mail</Label>
-                      <Input id="wife_email" type="email" {...form.register("wife.email")} />
+                    <div className="space-y-1">
+                      <Label htmlFor="wife_occupation" className="text-xs font-medium">Pekerjaan</Label>
+                      <Input id="wife_occupation" className="h-9 text-xs" {...form.register("wife.occupation")} />
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="wife_address">Alamat Rumah</Label>
-                    <Input id="wife_address" {...form.register("wife.address")} />
+                  <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
+                    <div className="space-y-1">
+                      <Label htmlFor="wife_phone" className="text-xs font-medium">No. Telp/HP</Label>
+                      <Input id="wife_phone" className="h-9 text-xs" {...form.register("wife.phone")} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="wife_email" className="text-xs font-medium">E-mail</Label>
+                      <Input id="wife_email" type="email" className="h-9 text-xs" {...form.register("wife.email")} />
+                    </div>
                   </div>
 
-                  <div className="border-t border-border pt-4 mt-2">
-                    <h4 className="text-sm font-medium mb-4 text-primary">Data Orang Tua Istri</h4>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="wife_parent_name">Nama Orang Tua</Label>
-                        <Input id="wife_parent_name" {...form.register("wife.parent_name")} />
+                  <div className="space-y-1">
+                    <Label htmlFor="wife_address" className="text-xs font-medium">Alamat Rumah</Label>
+                    <Input id="wife_address" className="h-9 text-xs" {...form.register("wife.address")} />
+                  </div>
+
+                  <div className="border-t border-border pt-3 mt-1">
+                    <h4 className="text-xs font-semibold mb-2 text-primary">Data Orang Tua Istri</h4>
+                    <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
+                      <div className="space-y-1">
+                        <Label htmlFor="wife_parent_name" className="text-xs font-medium">Nama Orang Tua</Label>
+                        <Input id="wife_parent_name" className="h-9 text-xs" {...form.register("wife.parent_name")} />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="wife_parent_address">Alamat Rumah (Orang Tua)</Label>
-                        <Input id="wife_parent_address" {...form.register("wife.parent_address")} />
+                      <div className="space-y-1">
+                        <Label htmlFor="wife_parent_address" className="text-xs font-medium">Alamat Orang Tua</Label>
+                        <Input id="wife_parent_address" className="h-9 text-xs" {...form.register("wife.parent_address")} />
                       </div>
                     </div>
                   </div>
@@ -361,40 +363,39 @@ export function MultiStepForm() {
 
           {/* STEP 3: CHILDREN */}
           {step === 3 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="space-y-6">
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 text-xs sm:text-sm">
+              <div className="space-y-3">
                 {fields.map((field, index) => (
-                  <div key={field.id} className="p-4 border border-border rounded-lg bg-background relative space-y-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <h4 className="font-semibold text-primary">Data Anak ke-{index + 1}</h4>
+                  <div key={field.id} className="p-3 border border-border rounded-lg bg-background relative space-y-2.5">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-semibold text-primary text-xs">Data Anak ke-{index + 1}</h4>
                       <Button 
                         type="button" 
                         variant="ghost" 
                         size="sm" 
-                        className="text-destructive hover:bg-destructive/10 h-8"
+                        className="text-destructive hover:bg-destructive/10 h-7 text-xs px-2"
                         onClick={() => remove(index)}
                       >
-                        <Trash2 className="w-4 h-4 mr-2" /> Hapus
+                        <Trash2 className="w-3.5 h-3.5 mr-1" /> Hapus
                       </Button>
                     </div>
 
-                    <div className="space-y-2 mb-4">
-                      <Label>Nama <span className="text-destructive">*</span></Label>
-                      <Input 
-                        placeholder="Nama anak" 
-                        {...form.register(`children.${index}.full_name`)} 
-                        className={form.formState.errors.children?.[index]?.full_name ? "border-destructive" : ""}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Jenis Kelamin <span className="text-destructive">*</span></Label>
+                    <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
+                      <div className="space-y-1">
+                        <Label className="text-xs font-medium">Nama Anak <span className="text-destructive">*</span></Label>
+                        <Input 
+                          placeholder="Nama anak" 
+                          {...form.register(`children.${index}.full_name`)} 
+                          className={`h-9 text-xs ${form.formState.errors.children?.[index]?.full_name ? "border-destructive" : ""}`}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs font-medium">Jenis Kelamin <span className="text-destructive">*</span></Label>
                         <Select 
                           onValueChange={(val) => form.setValue(`children.${index}.gender`, val as "L" | "P")}
                           value={form.watch(`children.${index}.gender`)}
                         >
-                          <SelectTrigger className={form.formState.errors.children?.[index]?.gender ? "border-destructive" : ""}>
+                          <SelectTrigger className={`h-9 text-xs ${form.formState.errors.children?.[index]?.gender ? "border-destructive" : ""}`}>
                             <SelectValue placeholder="L/P" />
                           </SelectTrigger>
                           <SelectContent>
@@ -403,21 +404,22 @@ export function MultiStepForm() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-2">
-                          <Label>Tempat Lahir</Label>
-                          <Input {...form.register(`children.${index}.birth_place`)} />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Tanggal Lahir</Label>
-                          <Input type="date" {...form.register(`children.${index}.birth_date`)} />
-                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
+                      <div className="space-y-1">
+                        <Label className="text-xs font-medium">Tempat Lahir</Label>
+                        <Input className="h-9 text-xs" {...form.register(`children.${index}.birth_place`)} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs font-medium">Tanggal Lahir</Label>
+                        <Input className="h-9 text-xs" type="date" {...form.register(`children.${index}.birth_date`)} />
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>Pendidikan Sekarang/Terakhir</Label>
-                      <Input {...form.register(`children.${index}.education`)} />
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium">Pendidikan Sekarang/Terakhir</Label>
+                      <Input className="h-9 text-xs" {...form.register(`children.${index}.education`)} />
                     </div>
                   </div>
                 ))}
@@ -426,10 +428,10 @@ export function MultiStepForm() {
               <Button 
                 type="button" 
                 variant="outline" 
-                className="w-full border-dashed border-2 py-6 text-muted-foreground hover:text-primary hover:border-primary/50"
+                className="w-full border-dashed border py-3 text-xs text-muted-foreground hover:text-primary hover:border-primary/50"
                 onClick={() => append({ nik: "", full_name: "", gender: undefined as unknown as "L" | "P", birth_place: "", birth_date: "", education: "" })}
               >
-                <Plus className="w-5 h-5 mr-2" /> Tambah Data Anak
+                <Plus className="w-4 h-4 mr-1.5" /> Tambah Data Anak
               </Button>
             </div>
           )}

@@ -30,46 +30,46 @@ export default async function MemberPage({ params }: MemberPageProps) {
   const isMale = person.gender === "Laki-laki";
 
   return (
-    <div className="w-full px-6 md:px-12 xl:px-[128px] py-12">
+    <div className="w-full px-4 py-6 md:px-12 md:py-12 xl:px-[128px]">
       <div className="max-w-4xl mx-auto">
         {/* Profile Header */}
-        <div className="flex flex-col md:flex-row items-center md:items-start gap-8 mb-10">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-8 mb-6 md:mb-10 text-center sm:text-left">
           {/* Photo */}
-          <div className="w-40 h-40 rounded-xl overflow-hidden bg-muted flex-shrink-0 flex items-center justify-center border-2 border-border">
+          <div className="w-28 h-28 md:w-40 md:h-40 rounded-xl overflow-hidden bg-muted flex-shrink-0 flex items-center justify-center border-2 border-border">
             {photoUrl ? (
               <img src={photoUrl} alt={person.full_name} className="w-full h-full object-cover" />
             ) : (
               <div
-                className={`w-20 h-20 rounded-full flex items-center justify-center ${
+                className={`w-14 h-14 md:w-20 md:h-20 rounded-full flex items-center justify-center ${
                   isMale ? "bg-blue-500/20 text-blue-400" : "bg-pink-500/20 text-pink-400"
                 }`}
               >
-                <User className="w-10 h-10" />
+                <User className="w-8 h-8 md:w-10 md:h-10" />
               </div>
             )}
           </div>
 
           {/* Name & Quick Info */}
-          <div className="text-center md:text-left flex-1">
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">{person.full_name}</h1>
+          <div className="flex-1">
+            <h1 className="text-2xl md:text-4xl font-bold text-foreground">{person.full_name}</h1>
             {person.nickname && (
-              <p className="text-lg text-muted-foreground mt-1">&quot;{person.nickname}&quot;</p>
+              <p className="text-sm md:text-lg text-muted-foreground mt-0.5 md:mt-1">&quot;{person.nickname}&quot;</p>
             )}
-            <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-4">
+            <div className="flex flex-wrap justify-center sm:justify-start gap-2 md:gap-3 mt-3 md:mt-4">
               {person.gender && (
-                <span className={`inline-flex items-center gap-1 text-sm px-3 py-1 rounded-full ${
+                <span className={`inline-flex items-center gap-1 text-xs md:text-sm px-2.5 py-0.5 md:px-3 md:py-1 rounded-full ${
                   isMale ? "bg-blue-500/10 text-blue-400" : "bg-pink-500/10 text-pink-400"
                 }`}>
                   {person.gender}
                 </span>
               )}
               {isDeceased && (
-                <span className="inline-flex items-center gap-1 text-sm px-3 py-1 rounded-full bg-muted text-muted-foreground">
+                <span className="inline-flex items-center gap-1 text-xs md:text-sm px-2.5 py-0.5 md:px-3 md:py-1 rounded-full bg-muted text-muted-foreground">
                   Almarhum/ah
                 </span>
               )}
               {person.data_status && (
-                <span className={`inline-flex items-center text-sm px-3 py-1 rounded-full ${
+                <span className={`inline-flex items-center text-xs md:text-sm px-2.5 py-0.5 md:px-3 md:py-1 rounded-full ${
                   person.data_status === "verified" ? "bg-primary/10 text-primary" :
                   person.data_status === "submitted" ? "bg-yellow-500/10 text-yellow-400" :
                   "bg-muted text-muted-foreground"
