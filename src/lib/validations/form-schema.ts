@@ -4,6 +4,7 @@ export const husbandSchema = z.object({
   nik: z.string().optional(),
   full_name: z.string().min(2, "Nama lengkap harus diisi"),
   family_status: z.string().min(1, "Status keluarga harus diisi"), // e.g. "Cucu"
+  life_status: z.enum(["alive", "deceased"]).default("alive"),
   birth_place: z.string().optional(),
   birth_date: z.string().optional(),
   education: z.string().optional(),
@@ -17,6 +18,7 @@ export const wifeSchema = z.object({
   has_wife: z.boolean().default(false),
   full_name: z.string().optional(),
   family_status: z.string().optional(), // e.g. "Cucu Menantu"
+  life_status: z.enum(["alive", "deceased"]).default("alive"),
   birth_place: z.string().optional(),
   birth_date: z.string().optional(),
   education: z.string().optional(),
@@ -32,6 +34,7 @@ export const childSchema = z.object({
   nik: z.string().optional(),
   full_name: z.string().min(2, "Nama harus diisi"),
   gender: z.enum(["L", "P"], { message: "Pilih jenis kelamin" }),
+  life_status: z.enum(["alive", "deceased"]).default("alive"),
   birth_place: z.string().optional(),
   birth_date: z.string().optional(),
   education: z.string().optional(),

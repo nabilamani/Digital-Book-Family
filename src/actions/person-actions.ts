@@ -18,6 +18,7 @@ export async function submitPersonForm(
         nik: data.husband.nik,
         full_name: data.husband.full_name,
         family_status: data.husband.family_status,
+        life_status: data.husband.life_status || "alive",
         gender: "Laki-laki", // Implicit for Husband
         birth_place: data.husband.birth_place || null,
         birth_date: data.husband.birth_date || null,
@@ -48,6 +49,7 @@ export async function submitPersonForm(
           nik: null, // As per physical form
           full_name: data.wife.full_name,
           family_status: data.wife.family_status || null,
+          life_status: data.wife.life_status || "alive",
           gender: "Perempuan", // Implicit for Wife
           birth_place: data.wife.birth_place || null,
           birth_date: data.wife.birth_date || null,
@@ -86,6 +88,7 @@ export async function submitPersonForm(
             nik: child.nik,
             full_name: child.full_name,
             gender: child.gender === "L" ? "Laki-laki" : "Perempuan",
+            life_status: child.life_status || "alive",
             birth_place: child.birth_place || null,
             birth_date: child.birth_date || null,
             education: child.education || null,

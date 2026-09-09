@@ -19,10 +19,10 @@ export default function Home() {
         >
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/20 text-secondary text-xs md:text-sm font-semibold mb-4 md:mb-6">
             <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
-            Private Alpha
+            Digital Family Book
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tight mb-4 md:mb-6 leading-tight">
-            Warisan Keluarga dalam <br className="hidden md:block" /> 
+            Warisan Keluarga dalam <br className="hidden md:block" />
             <span className="text-primary">Buku Digital Interaktif</span>
           </h1>
           <p className="text-base sm:text-lg md:text-2xl text-muted-foreground max-w-[800px] mb-8 md:mb-12">
@@ -104,7 +104,7 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
-      
+
     </div>
   );
 }

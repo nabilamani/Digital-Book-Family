@@ -150,6 +150,7 @@ ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read persons" ON persons FOR SELECT USING (true);
 CREATE POLICY "Allow public insert persons" ON persons FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update persons" ON persons FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete persons" ON persons FOR DELETE USING (true);
 
 CREATE POLICY "Allow public read families" ON families FOR SELECT USING (true);
 CREATE POLICY "Allow public insert families" ON families FOR INSERT WITH CHECK (true);
@@ -161,6 +162,7 @@ CREATE POLICY "Allow public insert family_members" ON family_members FOR INSERT 
 CREATE POLICY "Allow public read relationships" ON relationships FOR SELECT USING (true);
 CREATE POLICY "Allow public insert relationships" ON relationships FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update relationships" ON relationships FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete relationships" ON relationships FOR DELETE USING (true);
 
 CREATE POLICY "Allow public read pending_persons" ON pending_persons FOR SELECT USING (true);
 CREATE POLICY "Allow public insert pending_persons" ON pending_persons FOR INSERT WITH CHECK (true);

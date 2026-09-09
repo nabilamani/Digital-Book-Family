@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { fullFormSchema, FullFormValues } from "@/lib/validations/form-schema";
@@ -23,6 +23,16 @@ export function MultiStepForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [husbandPhoto, setHusbandPhoto] = useState<File | null>(null);
   const [wifePhoto, setWifePhoto] = useState<File | null>(null);
+  const [husbandPhotoPreview, setHusbandPhotoPreview] = useState<string | null>(null);
+  const [wifePhotoPreview, setWifePhotoPreview] = useState<string | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (husbandPhotoPreview) URL.revokeObjectURL(husbandPhotoPreview);
+      if (wifePhotoPreview) URL.revokeObjectURL(wifePhotoPreview);
+    };
+  }, [husbandPhotoPreview, wifePhotoPreview]);
 
   const form = useForm<FullFormValues>({
     resolver: zodResolver(fullFormSchema) as any,
@@ -31,6 +41,7 @@ export function MultiStepForm() {
         nik: "",
         full_name: "",
         family_status: "",
+        life_status: "alive",
         birth_place: "",
         birth_date: "",
         education: "",
@@ -43,6 +54,7 @@ export function MultiStepForm() {
         has_wife: false,
         full_name: "",
         family_status: "",
+        life_status: "alive",
         birth_place: "",
         birth_date: "",
         education: "",
@@ -96,6 +108,15 @@ export function MultiStepForm() {
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "husband" | "wife") => {
     const file = e.target.files?.[0];
     if (file) {
+      const previewUrl = URL.createObjectURL(file);
+      if (type === "husband") {
+        if (husbandPhotoPreview) URL.revokeObjectURL(husbandPhotoPreview);
+        setHusbandPhotoPreview(previewUrl);
+      } else {
+        if (wifePhotoPreview) URL.revokeObjectURL(wifePhotoPreview);
+        setWifePhotoPreview(previewUrl);
+      }
+
       try {
         const options = {
           maxSizeMB: 1,
@@ -105,11 +126,23 @@ export function MultiStepForm() {
         const compressedFile = await imageCompression(file, options);
         if (type === "husband") setHusbandPhoto(compressedFile);
         else setWifePhoto(compressedFile);
-        toast.success(`Foto ${type === "husband" ? "Suami" : "Istri"} berhasil dikompresi.`);
+        toast.success(`Foto ${type === "husband" ? "Suami" : "Istri"} berhasil diproses.`);
       } catch (error) {
         console.error(error);
         toast.error("Gagal memproses foto.");
       }
+    }
+  };
+
+  const handleRemovePhoto = (type: "husband" | "wife") => {
+    if (type === "husband") {
+      if (husbandPhotoPreview) URL.revokeObjectURL(husbandPhotoPreview);
+      setHusbandPhoto(null);
+      setHusbandPhotoPreview(null);
+    } else {
+      if (wifePhotoPreview) URL.revokeObjectURL(wifePhotoPreview);
+      setWifePhoto(null);
+      setWifePhotoPreview(null);
     }
   };
 
@@ -137,10 +170,10 @@ export function MultiStepForm() {
 
       const result = await submitPersonForm(data, husbandPhotoPath, wifePhotoPath);
       
-      if (result.success && result.editToken) {
+      if (result.success) {
         toast.dismiss();
         toast.success("Data berhasil disimpan!");
-        router.push(`/form/success?token=${result.editToken}`);
+        router.push("/form/success");
       } else {
         throw new Error(result.error);
       }
@@ -182,28 +215,95 @@ export function MultiStepForm() {
           {/* STEP 1: HUSBAND DATA */}
           {step === 1 && (
             <div className="space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 text-xs sm:text-sm">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4 items-end">
-                <div className="space-y-1">
-                  <Label htmlFor="husband_photo" className="text-xs font-medium">Foto Profil <span className="text-destructive">*</span></Label>
+              {/* Foto Profil */}
+              <div className="space-y-1.5">
+                <Label htmlFor="husband_photo" className="text-xs font-medium">Foto Profil</Label>
+                {husbandPhotoPreview ? (
+                  <div className="flex items-center gap-3 p-2.5 rounded-lg border border-border bg-background">
+                    <div className="relative w-16 h-16 rounded-md overflow-hidden border border-border shrink-0 bg-muted">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img 
+                        src={husbandPhotoPreview} 
+                        alt="Preview Foto Suami" 
+                        className="w-full h-full object-cover" 
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-semibold truncate text-foreground">
+                          {husbandPhoto?.name || "Foto Suami Terpilih"}
+                        </span>
+                        <span className="bg-primary/10 text-primary border border-primary/20 text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0">
+                          Siap Unggah
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {husbandPhoto ? `${(husbandPhoto.size / 1024).toFixed(0)} KB (terkompresi)` : "Foto terpilih"}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <label 
+                          htmlFor="husband_photo_change" 
+                          className="text-xs text-primary hover:underline cursor-pointer font-medium"
+                        >
+                          Ganti Foto
+                        </label>
+                        <input 
+                          id="husband_photo_change" 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={(e) => handlePhotoChange(e, "husband")} 
+                          className="hidden" 
+                        />
+                        <span className="text-muted-foreground text-xs">•</span>
+                        <button 
+                          type="button" 
+                          onClick={() => handleRemovePhoto("husband")} 
+                          className="text-xs text-destructive hover:underline font-medium"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
                   <Input 
                     id="husband_photo" 
                     type="file" 
-                    accept="image/*"
-                    onChange={(e) => handlePhotoChange(e, "husband")}
-                    className="bg-background text-muted-foreground file:bg-primary file:text-black file:border-0 file:rounded-md file:px-2.5 file:py-0.5 file:mr-2 file:font-semibold text-xs h-9"
+                    accept="image/*" 
+                    onChange={(e) => handlePhotoChange(e, "husband")} 
+                    className="bg-background text-muted-foreground file:bg-primary file:text-black file:border-0 file:rounded-md file:px-2.5 file:py-0.5 file:mr-2 file:font-semibold text-xs h-9" 
                   />
-                </div>
+                )}
+              </div>
+
+              {/* Status Keluarga & Status Hidup */}
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
                 <div className="space-y-1">
                   <Label htmlFor="husband_family_status" className="text-xs font-medium">Status Keluarga <span className="text-destructive">*</span></Label>
                   <Input 
                     id="husband_family_status" 
-                    placeholder="Contoh: Kepala Keluarga / Cucu" 
-                    {...form.register("husband.family_status")}
-                    className={`h-9 text-xs ${form.formState.errors.husband?.family_status ? "border-destructive" : ""}`}
+                    placeholder="Contoh: Cucu" 
+                    {...form.register("husband.family_status")} 
+                    className={`h-9 text-xs ${form.formState.errors.husband?.family_status ? "border-destructive" : ""}`} 
                   />
                   {form.formState.errors.husband?.family_status && (
                     <p className="text-[11px] text-destructive">{form.formState.errors.husband.family_status.message}</p>
                   )}
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="husband_life_status" className="text-xs font-medium">Status Hidup</Label>
+                  <Select 
+                    value={form.watch("husband.life_status") || "alive"} 
+                    onValueChange={(val) => form.setValue("husband.life_status", val as "alive" | "deceased")}
+                  >
+                    <SelectTrigger id="husband_life_status" className="h-9 text-xs">
+                      <SelectValue placeholder="Pilih" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="alive">Hidup</SelectItem>
+                      <SelectItem value="deceased">Meninggal</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -276,20 +376,87 @@ export function MultiStepForm() {
 
               {hasWife && (
                 <div className="space-y-3 pt-2 border-t border-border">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4 items-end">
-                    <div className="space-y-1">
-                      <Label htmlFor="wife_photo" className="text-xs font-medium">Foto Profil <span className="text-destructive">*</span></Label>
+                  {/* Foto Profil Istri */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="wife_photo" className="text-xs font-medium">Foto Profil</Label>
+                    {wifePhotoPreview ? (
+                      <div className="flex items-center gap-3 p-2.5 rounded-lg border border-border bg-background">
+                        <div className="relative w-16 h-16 rounded-md overflow-hidden border border-border shrink-0 bg-muted">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img 
+                            src={wifePhotoPreview} 
+                            alt="Preview Foto Istri" 
+                            className="w-full h-full object-cover" 
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-semibold truncate text-foreground">
+                              {wifePhoto?.name || "Foto Istri Terpilih"}
+                            </span>
+                            <span className="bg-primary/10 text-primary border border-primary/20 text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0">
+                              Siap Unggah
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            {wifePhoto ? `${(wifePhoto.size / 1024).toFixed(0)} KB (terkompresi)` : "Foto terpilih"}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <label 
+                              htmlFor="wife_photo_change" 
+                              className="text-xs text-primary hover:underline cursor-pointer font-medium"
+                            >
+                              Ganti Foto
+                            </label>
+                            <input 
+                              id="wife_photo_change" 
+                              type="file" 
+                              accept="image/*" 
+                              onChange={(e) => handlePhotoChange(e, "wife")} 
+                              className="hidden" 
+                            />
+                            <span className="text-muted-foreground text-xs">•</span>
+                            <button 
+                              type="button" 
+                              onClick={() => handleRemovePhoto("wife")} 
+                              className="text-xs text-destructive hover:underline font-medium"
+                            >
+                              Hapus
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
                       <Input 
                         id="wife_photo" 
                         type="file" 
-                        accept="image/*"
-                        onChange={(e) => handlePhotoChange(e, "wife")}
-                        className="bg-background text-muted-foreground file:bg-primary file:text-black file:border-0 file:rounded-md file:px-2.5 file:py-0.5 file:mr-2 file:font-semibold text-xs h-9"
+                        accept="image/*" 
+                        onChange={(e) => handlePhotoChange(e, "wife")} 
+                        className="bg-background text-muted-foreground file:bg-primary file:text-black file:border-0 file:rounded-md file:px-2.5 file:py-0.5 file:mr-2 file:font-semibold text-xs h-9" 
                       />
-                    </div>
+                    )}
+                  </div>
+
+                  {/* Status Keluarga & Status Hidup Istri */}
+                  <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
                     <div className="space-y-1">
                       <Label htmlFor="wife_family_status" className="text-xs font-medium">Status Keluarga</Label>
                       <Input id="wife_family_status" className="h-9 text-xs" placeholder="Contoh: Cucu Menantu" {...form.register("wife.family_status")} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="wife_life_status" className="text-xs font-medium">Status Hidup</Label>
+                      <Select 
+                        value={form.watch("wife.life_status") || "alive"} 
+                        onValueChange={(val) => form.setValue("wife.life_status", val as "alive" | "deceased")}
+                      >
+                        <SelectTrigger id="wife_life_status" className="h-9 text-xs">
+                          <SelectValue placeholder="Pilih" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="alive">Hidup</SelectItem>
+                          <SelectItem value="deceased">Meninggal</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
@@ -342,8 +509,9 @@ export function MultiStepForm() {
                     <Label htmlFor="wife_address" className="text-xs font-medium">Alamat Rumah</Label>
                     <Input id="wife_address" className="h-9 text-xs" {...form.register("wife.address")} />
                   </div>
+                  
 
-                  <div className="border-t border-border pt-3 mt-1">
+                  {/* <div className="border-t border-border pt-3 mt-1">
                     <h4 className="text-xs font-semibold mb-2 text-primary">Data Orang Tua Istri</h4>
                     <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
                       <div className="space-y-1">
@@ -355,7 +523,7 @@ export function MultiStepForm() {
                         <Input id="wife_parent_address" className="h-9 text-xs" {...form.register("wife.parent_address")} />
                       </div>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               )}
             </div>
@@ -386,14 +554,14 @@ export function MultiStepForm() {
                         <Input 
                           placeholder="Nama anak" 
                           {...form.register(`children.${index}.full_name`)} 
-                          className={`h-9 text-xs ${form.formState.errors.children?.[index]?.full_name ? "border-destructive" : ""}`}
+                          className={`h-9 text-xs ${form.formState.errors.children?.[index]?.full_name ? "border-destructive" : ""}`} 
                         />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs font-medium">Jenis Kelamin <span className="text-destructive">*</span></Label>
                         <Select 
-                          onValueChange={(val) => form.setValue(`children.${index}.gender`, val as "L" | "P")}
-                          value={form.watch(`children.${index}.gender`)}
+                          onValueChange={(val) => form.setValue(`children.${index}.gender`, val as "L" | "P")} 
+                          value={form.watch(`children.${index}.gender`) || ""}
                         >
                           <SelectTrigger className={`h-9 text-xs ${form.formState.errors.children?.[index]?.gender ? "border-destructive" : ""}`}>
                             <SelectValue placeholder="L/P" />
@@ -428,8 +596,8 @@ export function MultiStepForm() {
               <Button 
                 type="button" 
                 variant="outline" 
-                className="w-full border-dashed border py-3 text-xs text-muted-foreground hover:text-primary hover:border-primary/50"
-                onClick={() => append({ nik: "", full_name: "", gender: undefined as unknown as "L" | "P", birth_place: "", birth_date: "", education: "" })}
+                className="w-full border-dashed border py-3 text-xs text-muted-foreground hover:text-primary hover:border-primary/50" 
+                onClick={() => append({ nik: "", full_name: "", gender: undefined as unknown as "L" | "P", life_status: "alive", birth_place: "", birth_date: "", education: "" })}
               >
                 <Plus className="w-4 h-4 mr-1.5" /> Tambah Data Anak
               </Button>
@@ -461,7 +629,7 @@ export function MultiStepForm() {
         ) : (
           <Button 
             type="button" 
-            onClick={form.handleSubmit(onSubmit)}
+            onClick={() => setShowConfirmation(true)}
             disabled={isSubmitting}
             className="bg-secondary text-white hover:bg-secondary/85"
           >
@@ -473,6 +641,47 @@ export function MultiStepForm() {
           </Button>
         )}
       </CardFooter>
+
+      {/* Confirmation Popup */}
+      {showConfirmation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md p-6 space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-secondary/15 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-5 h-5 text-secondary" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-foreground">Konfirmasi Penyimpanan</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Pastikan data sudah benar sebelum disimpan.</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Data yang Anda masukkan akan tersimpan dan direkap sebagai bagian dari <span className="text-foreground font-medium">Buku Induk Keluarga</span>. Pastikan seluruh informasi telah diisi dengan benar karena data ini akan digunakan untuk pencatatan silsilah keluarga.
+            </p>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => setShowConfirmation(false)}
+                className="text-muted-foreground text-sm"
+              >
+                Periksa Kembali
+              </Button>
+              <Button 
+                type="button" 
+                onClick={() => {
+                  setShowConfirmation(false);
+                  form.handleSubmit(onSubmit)();
+                }}
+                disabled={isSubmitting}
+                className="bg-secondary text-white hover:bg-secondary/85 text-sm"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-1.5" /> Ya, Simpan Data
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }

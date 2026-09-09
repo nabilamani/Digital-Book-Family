@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Search, Edit2, Trash2, Plus, X, ChevronDown, ChevronUp, Users, User, Heart, Baby } from "lucide-react";
+import { Search, Edit2, Trash2, Plus, X, ChevronDown, ChevronUp, Users, User, Heart, Baby, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { createAdminFamily, updateAdminFamily, deleteAdminFamily } from "@/actions/admin-actions";
 import { useRouter } from "next/navigation";
@@ -19,6 +19,9 @@ export function FamiliesTable({ families }: { families: any[] }) {
   const [editingFamily, setEditingFamily] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState<"husband" | "wife" | "children">("husband");
   const [isLoading, setIsLoading] = useState(false);
+  const [familyToDelete, setFamilyToDelete] = useState<any | null>(null);
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState<any>({
@@ -176,7 +179,7 @@ export function FamiliesTable({ families }: { families: any[] }) {
     });
   };
 
-  const handleSave = async () => {
+  const handleOpenSaveConfirm = () => {
     if (!formData.husband.full_name) {
       toast.error("Nama lengkap Kepala Keluarga harus diisi");
       setActiveTab("husband");
@@ -195,6 +198,11 @@ export function FamiliesTable({ families }: { families: any[] }) {
       return;
     }
 
+    setShowSaveConfirm(true);
+  };
+
+  const executeSave = async () => {
+    setShowSaveConfirm(false);
     setIsLoading(true);
     let res;
     if (editingFamily) {
@@ -217,20 +225,26 @@ export function FamiliesTable({ families }: { families: any[] }) {
     }
   };
 
-  const handleDelete = async (family: any) => {
-    const headName = family.head?.full_name || "Keluarga ini";
-    if (confirm(`Apakah Anda yakin ingin menghapus data keluarga ${headName}? Seluruh data anggota keluarga terkait akan terhapus.`)) {
-      const headId = family.head.id;
-      const wifeId = family.wife?.id || null;
-      const childIds = (family.children || []).map((c: any) => c.id);
+  const requestDelete = (family: any) => {
+    setFamilyToDelete(family);
+  };
 
-      const res = await deleteAdminFamily(headId, wifeId, childIds);
-      if (res.success) {
-        toast.success("Data keluarga berhasil dihapus");
-        router.refresh();
-      } else {
-        toast.error(res.error || "Gagal menghapus data keluarga");
-      }
+  const executeDelete = async () => {
+    if (!familyToDelete) return;
+    setIsDeleting(true);
+    const headId = familyToDelete.head.id;
+    const wifeId = familyToDelete.wife?.id || null;
+    const childIds = (familyToDelete.children || []).map((c: any) => c.id);
+
+    const res = await deleteAdminFamily(headId, wifeId, childIds);
+    setIsDeleting(false);
+    setFamilyToDelete(null);
+
+    if (res.success) {
+      toast.success("Data keluarga berhasil dihapus");
+      router.refresh();
+    } else {
+      toast.error(res.error || "Gagal menghapus data keluarga");
     }
   };
 
@@ -283,7 +297,7 @@ export function FamiliesTable({ families }: { families: any[] }) {
                     <Button variant="ghost" size="icon" className="h-8 w-8" title="Edit" onClick={() => openModalForEdit(family)}>
                       <Edit2 className="w-4 h-4 text-blue-400" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" title="Hapus" onClick={() => handleDelete(family)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" title="Hapus" onClick={() => requestDelete(family)}>
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </Button>
                   </div>
@@ -423,7 +437,7 @@ export function FamiliesTable({ families }: { families: any[] }) {
                           <Button variant="ghost" size="icon" title="Edit" onClick={() => openModalForEdit(family)}>
                             <Edit2 className="w-4 h-4 text-blue-400" />
                           </Button>
-                          <Button variant="ghost" size="icon" title="Hapus" onClick={() => handleDelete(family)}>
+                          <Button variant="ghost" size="icon" title="Hapus" onClick={() => requestDelete(family)}>
                             <Trash2 className="w-4 h-4 text-red-500" />
                           </Button>
                         </div>
@@ -939,7 +953,7 @@ export function FamiliesTable({ families }: { families: any[] }) {
                             <div className="space-y-1">
                               <Label className="text-xs">Kelamin</Label>
                               <Select
-                                value={child.gender}
+                                value={child.gender || ""}
                                 onValueChange={(val) => handleChildChange(idx, "gender", val)}
                               >
                                 <SelectTrigger className="h-8 text-xs">
@@ -1015,10 +1029,90 @@ export function FamiliesTable({ families }: { families: any[] }) {
                 <Button variant="ghost" size="sm" onClick={closeModal} disabled={isLoading}>
                   Batal
                 </Button>
-                <Button size="sm" onClick={handleSave} disabled={isLoading} className="bg-primary text-black hover:bg-primary/80">
+                <Button size="sm" onClick={handleOpenSaveConfirm} disabled={isLoading} className="bg-primary text-black hover:bg-primary/80">
                   {isLoading ? "Menyimpan..." : "Simpan Data Keluarga"}
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pop Up Konfirmasi Hapus Data */}
+      {familyToDelete && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md p-6 space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-destructive/15 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-destructive" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-foreground">Konfirmasi Hapus Data</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Tindakan ini tidak dapat dibatalkan.</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Apakah Anda yakin ingin menghapus data keluarga <span className="text-foreground font-semibold">&ldquo;{familyToDelete.head?.full_name || "Keluarga Ini"}&rdquo;</span>? Seluruh data anggota keluarga terkait (istri & anak) akan terhapus secara permanen dari sistem.
+            </p>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => setFamilyToDelete(null)}
+                disabled={isDeleting}
+                className="text-muted-foreground text-sm"
+              >
+                Batal
+              </Button>
+              <Button 
+                type="button" 
+                onClick={executeDelete}
+                disabled={isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-sm font-medium"
+              >
+                {isDeleting ? "Menghapus..." : "Ya, Hapus Data"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pop Up Konfirmasi Simpan / Edit Data */}
+      {showSaveConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md p-6 space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-foreground">
+                  {editingFamily ? "Konfirmasi Perbarui Data" : "Konfirmasi Simpan Data"}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Pastikan seluruh data sudah sesuai.</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Apakah Anda yakin ingin {editingFamily ? "memperbarui" : "menyimpan"} data keluarga <span className="text-foreground font-semibold">&ldquo;{formData.husband.full_name}&rdquo;</span>? Data yang tersimpan akan langsung diperbarui di dalam sistem.
+            </p>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => setShowSaveConfirm(false)}
+                disabled={isLoading}
+                className="text-muted-foreground text-sm"
+              >
+                Periksa Kembali
+              </Button>
+              <Button 
+                type="button" 
+                onClick={executeSave}
+                disabled={isLoading}
+                className="bg-primary text-black hover:bg-primary/85 text-sm font-semibold"
+              >
+                {isLoading ? "Menyimpan..." : editingFamily ? "Ya, Perbarui Data" : "Ya, Simpan Data"}
+              </Button>
             </div>
           </div>
         </div>
