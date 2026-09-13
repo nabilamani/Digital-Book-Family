@@ -82,3 +82,25 @@ export async function fetchPersonByEditToken(token: string) {
     return { person: null, error: error.message };
   }
 }
+
+export async function updatePaperBookStatus(personId: string, isInPaperBook: boolean) {
+  try {
+    const supabase: any = await createClient();
+    // Try updating is_in_paper_book column in persons table
+    const { error } = await supabase
+      .from("persons")
+      .update({ is_in_paper_book: isInPaperBook })
+      .eq("id", personId);
+
+    if (error) {
+      console.warn("Notice updating is_in_paper_book:", error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err: any) {
+    console.error("Exception in updatePaperBookStatus:", err.message || err);
+    return { success: false, error: err.message };
+  }
+}
+
+
