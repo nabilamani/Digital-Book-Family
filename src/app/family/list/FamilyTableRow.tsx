@@ -36,13 +36,13 @@ export function FamilyTableRow({
           <div className="flex justify-between items-start gap-2">
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-foreground text-base">{head.full_name}</h3>
-                {isPaperBookChecked && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-green-500/15 text-green-600 px-2 py-0.5 rounded-full border border-green-500/30">
-                    <BookCheck className="w-3 h-3" /> Buku Kertas
-                  </span>
-                )}
-              </div>
+  <h3 className="font-bold text-foreground text-base">{head.full_name}</h3>
+  {isPaperBookChecked && (
+    <span className="inline-flex items-center text-green-600" title="Sudah terdata di Buku Kertas">
+      <BookCheck className="w-4 h-4" />
+    </span>
+  )}
+</div>
               <p className="text-xs text-primary font-medium mt-0.5">{head.family_status || "Kepala Keluarga"}</p>
             </div>
             
@@ -120,7 +120,7 @@ export function FamilyTableRow({
             <span>{head.full_name}</span>
             {isPaperBookChecked && (
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-green-500/15 text-green-600 px-2 py-0.5 rounded-full border border-green-500/30">
-                <BookCheck className="w-3 h-3" /> Buku Kertas
+                <BookCheck className="w-3 h-3" /> Terdata
               </span>
             )}
           </div>

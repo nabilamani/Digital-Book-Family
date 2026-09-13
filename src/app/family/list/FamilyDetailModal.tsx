@@ -18,6 +18,33 @@ interface FamilyDetailModalProps {
 export function FamilyDetailModal({ isOpen, onClose, family }: FamilyDetailModalProps) {
   const [mounted, setMounted] = useState(false);
 
+  // Touch gesture states for swipe down to close on mobile
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [dragOffsetY, setDragOffsetY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartY(e.touches[0].clientY);
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY === null) return;
+    const deltaY = e.touches[0].clientY - touchStartY;
+    if (deltaY > 0) {
+      setDragOffsetY(deltaY);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    if (dragOffsetY > 100) {
+      onClose();
+    }
+    setDragOffsetY(0);
+    setTouchStartY(null);
+  };
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -61,15 +88,32 @@ export function FamilyDetailModal({ isOpen, onClose, family }: FamilyDetailModal
       <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
 
       {/* Pop-up (Desktop) / Bottom Sheet (Mobile) Container */}
-      <div className="relative w-full max-w-4xl bg-card border border-border shadow-2xl rounded-t-2xl md:rounded-2xl flex flex-col max-h-[90vh] md:max-h-[85vh] overflow-hidden z-10 animate-in slide-in-from-bottom-5 md:zoom-in-95 duration-200">
+      <div
+        style={{
+          transform: dragOffsetY > 0 ? `translateY(${dragOffsetY}px)` : "none",
+          transition: isDragging ? "none" : "transform 0.2s ease-out",
+        }}
+        className="relative w-full max-w-4xl bg-card border border-border shadow-2xl rounded-t-2xl md:rounded-2xl flex flex-col max-h-[90vh] md:max-h-[85vh] overflow-hidden z-10 animate-in slide-in-from-bottom-5 md:zoom-in-95 duration-200"
+      >
         
-        {/* Grab Handle for Mobile Bottom Sheet */}
-        <div className="block md:hidden py-2 bg-muted/40 text-center shrink-0 cursor-pointer" onClick={onClose}>
-          <div className="w-12 h-1 bg-muted-foreground/40 rounded-full mx-auto" />
+        {/* Touch Handle Header for Mobile Bottom Sheet Swipe Down */}
+        <div
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          className="block md:hidden py-3 bg-muted/40 text-center shrink-0 cursor-grab active:cursor-grabbing touch-none"
+        >
+          <div className="w-12 h-1.5 bg-muted-foreground/50 rounded-full mx-auto" />
         </div>
 
         {/* Header Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/20 shrink-0">
+        <div
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/20 shrink-0 md:touch-auto"
+        >
+
           <div>
             <h3 className="text-lg md:text-xl font-bold text-foreground">
               Detail Data Keluarga - {head?.full_name || "-"}

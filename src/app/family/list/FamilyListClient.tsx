@@ -68,8 +68,34 @@ export function FamilyListClient({ initialFamilies }: FamilyListClientProps) {
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
   
-  // Mobile filter drawer state
+  // Mobile filter drawer state & touch gestures
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [filterTouchStartY, setFilterTouchStartY] = useState<number | null>(null);
+  const [filterDragOffsetY, setFilterDragOffsetY] = useState(0);
+  const [isFilterDragging, setIsFilterDragging] = useState(false);
+
+  const handleFilterTouchStart = (e: React.TouchEvent) => {
+    setFilterTouchStartY(e.touches[0].clientY);
+    setIsFilterDragging(true);
+  };
+
+  const handleFilterTouchMove = (e: React.TouchEvent) => {
+    if (filterTouchStartY === null) return;
+    const deltaY = e.touches[0].clientY - filterTouchStartY;
+    if (deltaY > 0) {
+      setFilterDragOffsetY(deltaY);
+    }
+  };
+
+  const handleFilterTouchEnd = () => {
+    setIsFilterDragging(false);
+    if (filterDragOffsetY > 100) {
+      setIsMobileFilterOpen(false);
+    }
+    setFilterDragOffsetY(0);
+    setFilterTouchStartY(null);
+  };
+
 
   // Reset to page 1 whenever filters change
   useEffect(() => {
@@ -302,11 +328,29 @@ export function FamilyListClient({ initialFamilies }: FamilyListClientProps) {
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-xs animate-in fade-in duration-200 md:hidden">
           <div className="absolute inset-0" onClick={() => setIsMobileFilterOpen(false)} aria-hidden="true" />
           
-          <div className="relative w-full bg-card border-t border-border rounded-t-2xl p-5 space-y-5 z-10 animate-in slide-in-from-bottom-5 duration-200">
-            {/* Grab Handle */}
-            <div className="w-12 h-1 bg-muted-foreground/40 rounded-full mx-auto" />
+          <div
+            style={{
+              transform: filterDragOffsetY > 0 ? `translateY(${filterDragOffsetY}px)` : "none",
+              transition: isFilterDragging ? "none" : "transform 0.2s ease-out",
+            }}
+            className="relative w-full bg-card border-t border-border rounded-t-2xl p-5 space-y-5 z-10 animate-in slide-in-from-bottom-5 duration-200"
+          >
+            {/* Grab Handle Header for Touch Drag Swipe Down */}
+            <div
+              onTouchStart={handleFilterTouchStart}
+              onTouchMove={handleFilterTouchMove}
+              onTouchEnd={handleFilterTouchEnd}
+              className="py-2 text-center cursor-grab active:cursor-grabbing touch-none -mt-2 -mx-5 px-5"
+            >
+              <div className="w-12 h-1.5 bg-muted-foreground/50 rounded-full mx-auto" />
+            </div>
             
-            <div className="flex items-center justify-between border-b border-border pb-3">
+            <div
+              onTouchStart={handleFilterTouchStart}
+              onTouchMove={handleFilterTouchMove}
+              onTouchEnd={handleFilterTouchEnd}
+              className="flex items-center justify-between border-b border-border pb-3 touch-none"
+            >
               <div className="flex items-center gap-2">
                 <SlidersHorizontal className="w-4 h-4 text-primary" />
                 <h3 className="font-bold text-foreground text-base">Filter & Shortir</h3>
@@ -320,6 +364,7 @@ export function FamilyListClient({ initialFamilies }: FamilyListClientProps) {
                 <X className="w-4 h-4" />
               </Button>
             </div>
+
 
             <div className="space-y-4 text-sm">
               {/* Category Filter */}
