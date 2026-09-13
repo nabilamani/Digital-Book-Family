@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight, BookCheck, X, RefreshCw, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FamilyTableRow } from "./FamilyTableRow";
@@ -11,8 +12,15 @@ interface FamilyListClientProps {
 }
 
 export function FamilyListClient({ initialFamilies }: FamilyListClientProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // 1. Paper Book Checklist State (localStorage + Supabase sync)
   const [checkedMap, setCheckedMap] = useState<Record<string, boolean>>(() => {
+
     const initial: Record<string, boolean> = {};
     initialFamilies.forEach((f) => {
       if (f.head?.id) {
@@ -324,7 +332,7 @@ export function FamilyListClient({ initialFamilies }: FamilyListClientProps) {
       </div>
 
       {/* Mobile Filter Bottom Sheet Modal */}
-      {isMobileFilterOpen && (
+      {isMobileFilterOpen && mounted && createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-xs animate-in fade-in duration-200 md:hidden">
           <div className="absolute inset-0" onClick={() => setIsMobileFilterOpen(false)} aria-hidden="true" />
           
@@ -333,14 +341,14 @@ export function FamilyListClient({ initialFamilies }: FamilyListClientProps) {
               transform: filterDragOffsetY > 0 ? `translateY(${filterDragOffsetY}px)` : "none",
               transition: isFilterDragging ? "none" : "transform 0.2s ease-out",
             }}
-            className="relative w-full bg-card border-t border-border rounded-t-2xl p-5 space-y-5 z-10 animate-in slide-in-from-bottom-5 duration-200"
+            className="relative w-full bg-card border-t border-border rounded-t-2xl p-5 pb-8 space-y-4 z-10 animate-in slide-in-from-bottom-5 duration-200 max-h-[85vh] flex flex-col overflow-hidden shadow-2xl"
           >
             {/* Grab Handle Header for Touch Drag Swipe Down */}
             <div
               onTouchStart={handleFilterTouchStart}
               onTouchMove={handleFilterTouchMove}
               onTouchEnd={handleFilterTouchEnd}
-              className="py-2 text-center cursor-grab active:cursor-grabbing touch-none -mt-2 -mx-5 px-5"
+              className="py-2 text-center cursor-grab active:cursor-grabbing touch-none -mt-2 -mx-5 px-5 shrink-0"
             >
               <div className="w-12 h-1.5 bg-muted-foreground/50 rounded-full mx-auto" />
             </div>
@@ -349,7 +357,7 @@ export function FamilyListClient({ initialFamilies }: FamilyListClientProps) {
               onTouchStart={handleFilterTouchStart}
               onTouchMove={handleFilterTouchMove}
               onTouchEnd={handleFilterTouchEnd}
-              className="flex items-center justify-between border-b border-border pb-3 touch-none"
+              className="flex items-center justify-between border-b border-border pb-3 touch-none shrink-0"
             >
               <div className="flex items-center gap-2">
                 <SlidersHorizontal className="w-4 h-4 text-primary" />
@@ -359,14 +367,13 @@ export function FamilyListClient({ initialFamilies }: FamilyListClientProps) {
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsMobileFilterOpen(false)}
-                className="w-8 h-8 rounded-full text-muted-foreground hover:text-foreground"
+                className="w-8 h-8 rounded-full text-muted-foreground hover:text-foreground shrink-0"
               >
                 <X className="w-4 h-4" />
               </Button>
             </div>
 
-
-            <div className="space-y-4 text-sm">
+            <div className="space-y-4 text-sm flex-1 overflow-y-auto pr-1">
               {/* Category Filter */}
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">Kategori Buku Kertas</label>
@@ -416,7 +423,7 @@ export function FamilyListClient({ initialFamilies }: FamilyListClientProps) {
             </div>
 
             {/* Modal Actions */}
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex items-center gap-3 pt-3 border-t border-border/60 shrink-0">
               {hasActiveFilters && (
                 <Button
                   variant="outline"
@@ -437,8 +444,10 @@ export function FamilyListClient({ initialFamilies }: FamilyListClientProps) {
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
+
 
       {/* Mobile Card List (< md) */}
       <div className="block md:hidden space-y-3">

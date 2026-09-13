@@ -39,7 +39,7 @@ export function FamilyTableRow({
   <h3 className="font-bold text-foreground text-base">{head.full_name}</h3>
   {isPaperBookChecked && (
     <span className="inline-flex items-center text-green-600" title="Sudah terdata di Buku Kertas">
-      <BookCheck className="w-4 h-4" />
+      {/* <BookCheck className="w-4 h-4" /> */}
     </span>
   )}
 </div>
