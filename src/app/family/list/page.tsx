@@ -12,38 +12,56 @@ export default async function FamilyListPage() {
   // Create a mapping of all persons by ID
   const personMap = new Map(persons.map((p: any) => [p.id, p]));
 
-  // Find Heads of Family
+  // Find Heads of Family (Anggota Utama yang mewakili keluarga besar)
   const heads = persons.filter((p: any) => {
     const isChild = relationships.some(
       (r: any) => r.relationship_type === "child" && r.related_person_id === p.id
     );
     if (isChild) return false;
 
-    const isWife = relationships.some((r: any) => {
-      if (r.relationship_type === "spouse" && r.related_person_id === p.id) {
-        const husband = personMap.get(r.person_id) as any;
-        return husband && (husband.gender === "L" || husband.gender === "Laki-laki");
+    // Check if person is secondary spouse (pasangan yang bukan anggota utama keluarga besar)
+    const spouseRels = relationships.filter(
+      (r: any) => r.relationship_type === "spouse" && r.person_id === p.id
+    );
+
+    for (const rel of spouseRels) {
+      const spouse = personMap.get(rel.related_person_id) as any;
+      if (!spouse) continue;
+
+      const pStatus = (p.family_status || "").toLowerCase();
+      const sStatus = (spouse.family_status || "").toLowerCase();
+
+      // If p is marked as Menantu while spouse is direct descendant, p is secondary
+      if (pStatus.includes("menantu") && !sStatus.includes("menantu")) return false;
+      if (sStatus.includes("menantu") && !pStatus.includes("menantu")) return true;
+
+      // Check created_by in relationship
+      if (rel.created_by) {
+        if (rel.created_by === spouse.id && rel.created_by !== p.id) {
+          return false;
+        }
+        if (rel.created_by === p.id) {
+          return true;
+        }
       }
-      return false;
-    });
-    if (isWife) return false;
+
+      // Default fallback: female married to male (unless status indicates otherwise)
+      const isPFemale = p.gender === "Perempuan" || p.gender === "P";
+      const isSMale = spouse.gender === "Laki-laki" || spouse.gender === "L";
+      if (isPFemale && isSMale) {
+        return false;
+      }
+    }
 
     return true;
   });
 
   // Build family objects
   const families = heads.map((head: any) => {
-    let wife = null;
-    const isMale = head.gender === "L" || head.gender === "Laki-laki";
-    
-    if (isMale) {
-      const spouseRel = relationships.find(
-        (r: any) => r.person_id === head.id && r.relationship_type === "spouse"
-      );
-      if (spouseRel) {
-        wife = personMap.get(spouseRel.related_person_id) || null;
-      }
-    }
+    const spouseRel = relationships.find(
+      (r: any) => r.person_id === head.id && r.relationship_type === "spouse"
+    );
+    const spouse = spouseRel ? personMap.get(spouseRel.related_person_id) || null : null;
 
     const childrenRels = relationships.filter(
       (r: any) => r.person_id === head.id && r.relationship_type === "child"
@@ -52,7 +70,7 @@ export default async function FamilyListPage() {
       .map((r: any) => personMap.get(r.related_person_id))
       .filter(Boolean);
 
-    return { head, wife, children };
+    return { head, spouse, wife: spouse, children };
   });
 
   return (

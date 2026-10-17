@@ -65,8 +65,15 @@ export function FamilyDetailModal({ isOpen, onClose, family }: FamilyDetailModal
 
   if (!isOpen || !family || !mounted) return null;
 
-  const { head, wife, children = [] } = family;
+  const { head, children = [] } = family;
+  const spouse = (family as any).spouse || family.wife;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+
+  const isHeadFemale = head?.gender === "Perempuan" || head?.gender === "P";
+  const headRoleLabel = isHeadFemale ? "Data Anggota Utama (Istri)" : "Data Kepala Keluarga (Suami)";
+
+  const isSpouseMale = spouse?.gender === "Laki-laki" || spouse?.gender === "L";
+  const spouseRoleLabel = isSpouseMale ? "Data Suami (Pasangan)" : "Data Istri (Pasangan)";
 
   const getPhotoUrl = (photoPath: string | null) => {
     if (!photoPath) return null;
@@ -130,15 +137,17 @@ export function FamilyDetailModal({ isOpen, onClose, family }: FamilyDetailModal
           </Button>
         </div>
 
-        {/* Scrollable Body - Matching original grid layout with photo & child birth data */}
+        {/* Scrollable Body - Matching grid layout with photo & child birth data */}
         <div className="flex-1 overflow-y-auto p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Data Kepala Keluarga & Istri */}
+            {/* Data Anggota Utama & Pasangan */}
             <div className="space-y-4">
-              {/* Data Kepala Keluarga */}
+              {/* Data Anggota Utama */}
               <div>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/40 bg-muted shrink-0 flex items-center justify-center">
+                  <div className={`w-10 h-10 rounded-full overflow-hidden border-2 bg-muted shrink-0 flex items-center justify-center ${
+                    isHeadFemale ? "border-pink-500/40" : "border-primary/40"
+                  }`}>
                     {getPhotoUrl(head?.photo_path) ? (
                       <img
                         src={getPhotoUrl(head.photo_path)!}
@@ -146,13 +155,17 @@ export function FamilyDetailModal({ isOpen, onClose, family }: FamilyDetailModal
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full bg-blue-500/10 text-blue-400 flex items-center justify-center">
+                      <div className={`w-full h-full flex items-center justify-center ${
+                        isHeadFemale ? "bg-pink-500/10 text-pink-400" : "bg-blue-500/10 text-blue-400"
+                      }`}>
                         <User className="w-7 h-7" />
                       </div>
                     )}
                   </div>
                   <div>
-                    <h4 className="font-semibold text-primary text-base">Data Kepala Keluarga</h4>
+                    <h4 className={`font-semibold text-base ${isHeadFemale ? "text-pink-400" : "text-primary"}`}>
+                      {headRoleLabel}
+                    </h4>
                     <p className="text-xs text-muted-foreground">{head?.full_name}</p>
                   </div>
                 </div>
@@ -160,8 +173,12 @@ export function FamilyDetailModal({ isOpen, onClose, family }: FamilyDetailModal
                 <div className="grid grid-cols-2 gap-2 text-sm bg-background border border-border p-3 rounded-lg md:bg-transparent md:border-transparent md:p-0">
                   <div className="text-muted-foreground">Nama Lengkap:</div>
                   <div className="font-medium">{head?.full_name || "-"}</div>
+                  <div className="text-muted-foreground">Status Keluarga:</div>
+                  <div className="font-medium">{head?.family_status || "-"}</div>
                   <div className="text-muted-foreground">TTL:</div>
                   <div className="font-medium">{formatTTL(head?.birth_place, head?.birth_date)}</div>
+                  <div className="text-muted-foreground">Nama Orang Tua:</div>
+                  <div className="font-medium">{head?.parent_name || "-"}</div>
                   <div className="text-muted-foreground">Pendidikan:</div>
                   <div className="font-medium">{head?.education || "-"}</div>
                   <div className="text-muted-foreground">Pekerjaan:</div>
@@ -183,50 +200,60 @@ export function FamilyDetailModal({ isOpen, onClose, family }: FamilyDetailModal
                 </div>
               </div>
 
-              {/* Data Istri */}
-              {wife && (
+              {/* Data Pasangan */}
+              {spouse && (
                 <div className="md:border-t md:border-border md:pt-4">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-pink-500/40 bg-muted shrink-0 flex items-center justify-center">
-                      {getPhotoUrl(wife?.photo_path) ? (
+                    <div className={`w-10 h-10 rounded-full overflow-hidden border-2 bg-muted shrink-0 flex items-center justify-center ${
+                      isSpouseMale ? "border-blue-500/40" : "border-pink-500/40"
+                    }`}>
+                      {getPhotoUrl(spouse?.photo_path) ? (
                         <img
-                          src={getPhotoUrl(wife.photo_path)!}
-                          alt={wife.full_name}
+                          src={getPhotoUrl(spouse.photo_path)!}
+                          alt={spouse.full_name}
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-pink-500/10 text-pink-400 flex items-center justify-center">
+                        <div className={`w-full h-full flex items-center justify-center ${
+                          isSpouseMale ? "bg-blue-500/10 text-blue-400" : "bg-pink-500/10 text-pink-400"
+                        }`}>
                           <User className="w-7 h-7" />
                         </div>
                       )}
                     </div>
                     <div>
-                      <h4 className="font-semibold text-pink-400 text-base">Data Istri</h4>
-                      <p className="text-xs text-muted-foreground">{wife.full_name}</p>
+                      <h4 className={`font-semibold text-base ${isSpouseMale ? "text-blue-400" : "text-pink-400"}`}>
+                        {spouseRoleLabel}
+                      </h4>
+                      <p className="text-xs text-muted-foreground">{spouse.full_name}</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 text-sm bg-background border border-border p-3 rounded-lg md:bg-transparent md:border-transparent md:p-0">
                     <div className="text-muted-foreground">Nama Lengkap:</div>
-                    <div className="font-medium">{wife.full_name || "-"}</div>
+                    <div className="font-medium">{spouse.full_name || "-"}</div>
+                    <div className="text-muted-foreground">Status Hubungan:</div>
+                    <div className="font-medium">{spouse.family_status || "-"}</div>
                     <div className="text-muted-foreground">TTL:</div>
-                    <div className="font-medium">{formatTTL(wife.birth_place, wife.birth_date)}</div>
+                    <div className="font-medium">{formatTTL(spouse.birth_place, spouse.birth_date)}</div>
+                    <div className="text-muted-foreground">Nama Orang Tua:</div>
+                    <div className="font-medium">{spouse.parent_name || "-"}</div>
                     <div className="text-muted-foreground">Pendidikan:</div>
-                    <div className="font-medium">{wife.education || "-"}</div>
+                    <div className="font-medium">{spouse.education || "-"}</div>
                     <div className="text-muted-foreground">Pekerjaan:</div>
-                    <div className="font-medium">{wife.occupation || "-"}</div>
+                    <div className="font-medium">{spouse.occupation || "-"}</div>
                     <div className="text-muted-foreground">No. Telp:</div>
-                    <div className="font-medium">{wife.phone || "-"}</div>
+                    <div className="font-medium">{spouse.phone || "-"}</div>
                     <div className="text-muted-foreground">Email:</div>
-                    <div className="font-medium break-all">{wife.email || "-"}</div>
+                    <div className="font-medium break-all">{spouse.email || "-"}</div>
                     <div className="text-muted-foreground">Alamat:</div>
-                    <div className="font-medium break-words">{wife.address || "-"}</div>
+                    <div className="font-medium break-words">{spouse.address || "-"}</div>
                     <div className="text-muted-foreground">Status Hidup:</div>
                     <div className="font-medium">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        wife.life_status === "alive" ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
+                        spouse.life_status === "alive" ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
                       }`}>
-                        {wife.life_status === "alive" ? "Hidup" : "Meninggal"}
+                        {spouse.life_status === "alive" ? "Hidup" : "Meninggal"}
                       </span>
                     </div>
                   </div>

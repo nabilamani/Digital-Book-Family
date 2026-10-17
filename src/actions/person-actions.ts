@@ -5,76 +5,83 @@ import { FullFormValues } from "@/lib/validations/form-schema";
 
 export async function submitPersonForm(
   data: FullFormValues, 
-  husbandPhotoPath: string | null,
-  wifePhotoPath: string | null
+  primaryPhotoPath: string | null,
+  spousePhotoPath: string | null
 ) {
   const supabase: any = await createClient();
 
   try {
-    // 1. Insert Husband (Data Pribadi)
-    const { data: husbandRecord, error: husbandError } = await supabase
+    const isPrimaryHusband = data.primary.role === "suami";
+    const primaryGender = isPrimaryHusband ? "Laki-laki" : "Perempuan";
+    const spouseGender = isPrimaryHusband ? "Perempuan" : "Laki-laki";
+
+    // 1. Insert Primary Person (Data Utama Silsilah Keluarga Besar)
+    const { data: primaryRecord, error: primaryError } = await supabase
       .from("persons")
       .insert({
-        nik: data.husband.nik,
-        full_name: data.husband.full_name,
-        family_status: data.husband.family_status,
-        life_status: data.husband.life_status || "alive",
-        gender: "Laki-laki", // Implicit for Husband
-        birth_place: data.husband.birth_place || null,
-        birth_date: data.husband.birth_date || null,
-        education: data.husband.education || null,
-        occupation: data.husband.occupation || null,
-        phone: data.husband.phone || null,
-        email: data.husband.email || null,
-        address: data.husband.address || null,
-        photo_path: husbandPhotoPath,
+        nik: data.primary.nik || null,
+        full_name: data.primary.full_name,
+        family_status: data.primary.family_status,
+        life_status: data.primary.life_status || "alive",
+        gender: primaryGender,
+        birth_place: data.primary.birth_place || null,
+        birth_date: data.primary.birth_date || null,
+        education: data.primary.education || null,
+        occupation: data.primary.occupation || null,
+        phone: data.primary.phone || null,
+        email: data.primary.email || null,
+        address: data.primary.address || null,
+        parent_name: data.primary.parent_name || null,
+        parent_address: data.primary.parent_address || null,
+        photo_path: primaryPhotoPath,
         data_status: "submitted",
       })
       .select("id, edit_token")
       .single();
 
-    if (husbandError) {
-      console.error("Error inserting husband:", husbandError);
-      throw new Error(`Gagal menyimpan data suami: ${husbandError.message || JSON.stringify(husbandError)}`);
+    if (primaryError) {
+      console.error("Error inserting primary person:", primaryError);
+      throw new Error(`Gagal menyimpan data utama: ${primaryError.message || JSON.stringify(primaryError)}`);
     }
 
-    const husbandId = husbandRecord.id;
-    let wifeId = null;
+    const primaryId = primaryRecord.id;
+    let spouseId = null;
 
-    // 2. Insert Wife (Data Istri)
-    if (data.wife.has_wife && data.wife.full_name) {
-      const { data: wifeRecord, error: wifeError } = await supabase
+    // 2. Insert Spouse (Data Pasangan Non-Keluarga Utama)
+    if (data.spouse.has_spouse && data.spouse.full_name) {
+      const defaultSpouseStatus = isPrimaryHusband ? "Istri" : "Suami";
+      const { data: spouseRecord, error: spouseError } = await supabase
         .from("persons")
         .insert({
-          nik: null, // As per physical form
-          full_name: data.wife.full_name,
-          family_status: data.wife.family_status || null,
-          life_status: data.wife.life_status || "alive",
-          gender: "Perempuan", // Implicit for Wife
-          birth_place: data.wife.birth_place || null,
-          birth_date: data.wife.birth_date || null,
-          education: data.wife.education || null,
-          occupation: data.wife.occupation || null,
-          phone: data.wife.phone || null,
-          email: data.wife.email || null,
-          address: data.wife.address || null,
-          parent_name: data.wife.parent_name || null,
-          parent_address: data.wife.parent_address || null,
-          photo_path: wifePhotoPath,
+          nik: null,
+          full_name: data.spouse.full_name,
+          family_status: data.spouse.family_status || defaultSpouseStatus,
+          life_status: data.spouse.life_status || "alive",
+          gender: spouseGender,
+          birth_place: data.spouse.birth_place || null,
+          birth_date: data.spouse.birth_date || null,
+          education: data.spouse.education || null,
+          occupation: data.spouse.occupation || null,
+          phone: data.spouse.phone || null,
+          email: data.spouse.email || null,
+          address: data.spouse.address || null,
+          parent_name: data.spouse.parent_name || null,
+          parent_address: data.spouse.parent_address || null,
+          photo_path: spousePhotoPath,
           data_status: "submitted",
         })
         .select("id")
         .single();
 
-      if (wifeError) {
-        console.error("Error inserting wife:", wifeError);
+      if (spouseError) {
+        console.error("Error inserting spouse:", spouseError);
       } else {
-        wifeId = wifeRecord.id;
+        spouseId = spouseRecord.id;
 
         // Insert Spouse Relationship
         await supabase.from("relationships").insert([
-          { person_id: husbandId, related_person_id: wifeId, relationship_type: "spouse", created_by: husbandId },
-          { person_id: wifeId, related_person_id: husbandId, relationship_type: "spouse", created_by: husbandId }
+          { person_id: primaryId, related_person_id: spouseId, relationship_type: "spouse", created_by: primaryId },
+          { person_id: spouseId, related_person_id: primaryId, relationship_type: "spouse", created_by: primaryId }
         ]);
       }
     }
@@ -85,7 +92,7 @@ export async function submitPersonForm(
         const { data: childRecord, error: childError } = await supabase
           .from("persons")
           .insert({
-            nik: child.nik,
+            nik: child.nik || null,
             full_name: child.full_name,
             gender: child.gender === "L" ? "Laki-laki" : "Perempuan",
             life_status: child.life_status || "alive",
@@ -102,13 +109,13 @@ export async function submitPersonForm(
           
           // Insert Parent-Child relationships
           const relationshipsToInsert = [
-            { person_id: husbandId, related_person_id: childId, relationship_type: "child", created_by: husbandId },
-            { person_id: childId, related_person_id: husbandId, relationship_type: "parent", created_by: husbandId }
+            { person_id: primaryId, related_person_id: childId, relationship_type: "child", created_by: primaryId },
+            { person_id: childId, related_person_id: primaryId, relationship_type: "parent", created_by: primaryId }
           ];
 
-          if (wifeId) {
-            relationshipsToInsert.push({ person_id: wifeId, related_person_id: childId, relationship_type: "child", created_by: husbandId });
-            relationshipsToInsert.push({ person_id: childId, related_person_id: wifeId, relationship_type: "parent", created_by: husbandId });
+          if (spouseId) {
+            relationshipsToInsert.push({ person_id: spouseId, related_person_id: childId, relationship_type: "child", created_by: primaryId });
+            relationshipsToInsert.push({ person_id: childId, related_person_id: spouseId, relationship_type: "parent", created_by: primaryId });
           }
 
           await supabase.from("relationships").insert(relationshipsToInsert);
@@ -118,7 +125,7 @@ export async function submitPersonForm(
       }
     }
 
-    return { success: true, editToken: husbandRecord.edit_token };
+    return { success: true, editToken: primaryRecord.edit_token };
   } catch (error) {
     console.error(error);
     return { success: false, error: (error as Error).message };

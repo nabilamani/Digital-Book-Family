@@ -482,9 +482,9 @@ export function FamilyListClient({ initialFamilies }: FamilyListClientProps) {
                 <th className="px-4 py-4 text-center font-semibold w-14" title="Checklist jika sudah dimasukkan ke Buku Kertas">
                   [✓]
                 </th>
-                <th className="px-6 py-4 font-semibold">Nama Kepala Keluarga</th>
+                <th className="px-6 py-4 font-semibold">Nama Anggota Utama</th>
                 <th className="px-6 py-4 font-semibold">Status Keluarga</th>
-                <th className="px-6 py-4 font-semibold">Nama Istri</th>
+                <th className="px-6 py-4 font-semibold">Nama Pasangan</th>
                 <th className="px-6 py-4 font-semibold">Alamat</th>
                 <th className="px-6 py-4 font-semibold">Aksi</th>
               </tr>

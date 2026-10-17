@@ -19,7 +19,8 @@ export function FamilyTableRow({
   onTogglePaperBook,
 }: FamilyTableRowProps) {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const { head, wife } = family;
+  const { head } = family;
+  const spouse = family.spouse || family.wife;
 
   const handleToggle = () => {
     if (onTogglePaperBook && head?.id) {
@@ -78,7 +79,7 @@ export function FamilyTableRow({
           </div>
 
           <div className="text-xs text-muted-foreground space-y-1 bg-background/50 p-2.5 rounded-md border border-border/50">
-            <div><span className="font-medium text-foreground">Nama Istri:</span> {wife ? wife.full_name : "-"}</div>
+            <div><span className="font-medium text-foreground">Pasangan:</span> {spouse ? spouse.full_name : "-"}</div>
             <div><span className="font-medium text-foreground">Alamat:</span> {head.address || "-"}</div>
           </div>
         </div>
@@ -126,7 +127,7 @@ export function FamilyTableRow({
           </div>
         </td>
         <td className="px-6 py-4 text-muted-foreground">{head.family_status || "-"}</td>
-        <td className="px-6 py-4 text-muted-foreground">{wife ? wife.full_name : "-"}</td>
+        <td className="px-6 py-4 text-muted-foreground">{spouse ? spouse.full_name : "-"}</td>
         <td className="px-6 py-4 text-muted-foreground max-w-[200px] truncate" title={head.address || "-"}>
           {head.address || "-"}
         </td>

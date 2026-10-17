@@ -14,30 +14,31 @@ import { toast } from "sonner";
 import { submitPersonForm } from "@/actions/person-actions";
 import { uploadPhoto } from "@/actions/upload-actions";
 import imageCompression from "browser-image-compression";
-import { Loader2, Plus, Trash2, ArrowRight, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Loader2, Plus, Trash2, ArrowRight, ArrowLeft, CheckCircle2, User, Heart, Mars, Venus } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export function MultiStepForm() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [husbandPhoto, setHusbandPhoto] = useState<File | null>(null);
-  const [wifePhoto, setWifePhoto] = useState<File | null>(null);
-  const [husbandPhotoPreview, setHusbandPhotoPreview] = useState<string | null>(null);
-  const [wifePhotoPreview, setWifePhotoPreview] = useState<string | null>(null);
+  const [primaryPhoto, setPrimaryPhoto] = useState<File | null>(null);
+  const [spousePhoto, setSpousePhoto] = useState<File | null>(null);
+  const [primaryPhotoPreview, setPrimaryPhotoPreview] = useState<string | null>(null);
+  const [spousePhotoPreview, setSpousePhotoPreview] = useState<string | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   useEffect(() => {
     return () => {
-      if (husbandPhotoPreview) URL.revokeObjectURL(husbandPhotoPreview);
-      if (wifePhotoPreview) URL.revokeObjectURL(wifePhotoPreview);
+      if (primaryPhotoPreview) URL.revokeObjectURL(primaryPhotoPreview);
+      if (spousePhotoPreview) URL.revokeObjectURL(spousePhotoPreview);
     };
-  }, [husbandPhotoPreview, wifePhotoPreview]);
+  }, [primaryPhotoPreview, spousePhotoPreview]);
 
   const form = useForm<FullFormValues>({
     resolver: zodResolver(fullFormSchema) as any,
     defaultValues: {
-      husband: {
+      primary: {
+        role: "suami",
         nik: "",
         full_name: "",
         family_status: "",
@@ -49,9 +50,11 @@ export function MultiStepForm() {
         phone: "",
         email: "",
         address: "",
+        parent_name: "",
+        parent_address: "",
       },
-      wife: {
-        has_wife: false,
+      spouse: {
+        has_spouse: false,
         full_name: "",
         family_status: "",
         life_status: "alive",
@@ -75,20 +78,26 @@ export function MultiStepForm() {
     name: "children",
   });
 
+  const primaryRole = form.watch("primary.role") || "suami";
+  const hasSpouse = form.watch("spouse.has_spouse");
+
+  const primaryLabel = primaryRole === "suami" ? "Suami" : "Istri";
+  const spouseLabel = primaryRole === "suami" ? "Istri" : "Suami";
+
   const handleNext = async () => {
     let isValid = false;
     if (step === 1) {
-      isValid = await form.trigger("husband");
+      isValid = await form.trigger("primary");
     } else if (step === 2) {
-      if (form.getValues("wife.has_wife")) {
-        // Only validate specific wife fields if has_wife is true
-        // Since we don't have min() requirements for wife in zod (all optional for now, except conditionally),
-        // we might just trigger the whole object. Let's trigger all wife fields.
-        isValid = await form.trigger("wife");
+      if (form.getValues("spouse.has_spouse")) {
+        isValid = await form.trigger("spouse");
         
-        // Manual validation if they check has_wife but don't fill name
-        if (isValid && !form.getValues("wife.full_name")) {
-          form.setError("wife.full_name", { type: "manual", message: "Nama istri harus diisi jika dicentang" });
+        // Manual validation if they check has_spouse but don't fill full_name
+        if (isValid && !form.getValues("spouse.full_name")?.trim()) {
+          form.setError("spouse.full_name", { 
+            type: "manual", 
+            message: `Nama ${spouseLabel.toLowerCase()} harus diisi jika opsi pasangan diaktifkan` 
+          });
           isValid = false;
         }
       } else {
@@ -105,16 +114,16 @@ export function MultiStepForm() {
     setStep((prev) => prev - 1);
   };
 
-  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "husband" | "wife") => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "primary" | "spouse") => {
     const file = e.target.files?.[0];
     if (file) {
       const previewUrl = URL.createObjectURL(file);
-      if (type === "husband") {
-        if (husbandPhotoPreview) URL.revokeObjectURL(husbandPhotoPreview);
-        setHusbandPhotoPreview(previewUrl);
+      if (type === "primary") {
+        if (primaryPhotoPreview) URL.revokeObjectURL(primaryPhotoPreview);
+        setPrimaryPhotoPreview(previewUrl);
       } else {
-        if (wifePhotoPreview) URL.revokeObjectURL(wifePhotoPreview);
-        setWifePhotoPreview(previewUrl);
+        if (spousePhotoPreview) URL.revokeObjectURL(spousePhotoPreview);
+        setSpousePhotoPreview(previewUrl);
       }
 
       try {
@@ -124,9 +133,9 @@ export function MultiStepForm() {
           useWebWorker: true,
         };
         const compressedFile = await imageCompression(file, options);
-        if (type === "husband") setHusbandPhoto(compressedFile);
-        else setWifePhoto(compressedFile);
-        toast.success(`Foto ${type === "husband" ? "Suami" : "Istri"} berhasil diproses.`);
+        if (type === "primary") setPrimaryPhoto(compressedFile);
+        else setSpousePhoto(compressedFile);
+        toast.success(`Foto ${type === "primary" ? primaryLabel : spouseLabel} berhasil diproses.`);
       } catch (error) {
         console.error(error);
         toast.error("Gagal memproses foto.");
@@ -134,41 +143,41 @@ export function MultiStepForm() {
     }
   };
 
-  const handleRemovePhoto = (type: "husband" | "wife") => {
-    if (type === "husband") {
-      if (husbandPhotoPreview) URL.revokeObjectURL(husbandPhotoPreview);
-      setHusbandPhoto(null);
-      setHusbandPhotoPreview(null);
+  const handleRemovePhoto = (type: "primary" | "spouse") => {
+    if (type === "primary") {
+      if (primaryPhotoPreview) URL.revokeObjectURL(primaryPhotoPreview);
+      setPrimaryPhoto(null);
+      setPrimaryPhotoPreview(null);
     } else {
-      if (wifePhotoPreview) URL.revokeObjectURL(wifePhotoPreview);
-      setWifePhoto(null);
-      setWifePhotoPreview(null);
+      if (spousePhotoPreview) URL.revokeObjectURL(spousePhotoPreview);
+      setSpousePhoto(null);
+      setSpousePhotoPreview(null);
     }
   };
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: FullFormValues) => {
     setIsSubmitting(true);
     toast.loading("Menyimpan data keluarga...");
 
     try {
-      let husbandPhotoPath = null;
-      let wifePhotoPath = null;
+      let primaryPhotoPath = null;
+      let spousePhotoPath = null;
 
-      if (husbandPhoto) {
+      if (primaryPhoto) {
         const formData = new FormData();
-        formData.append("file", husbandPhoto);
+        formData.append("file", primaryPhoto);
         const uploadResult = await uploadPhoto(formData);
-        if (uploadResult.success) husbandPhotoPath = uploadResult.path || null;
+        if (uploadResult.success) primaryPhotoPath = uploadResult.path || null;
       }
 
-      if (wifePhoto && data.wife.has_wife) {
+      if (spousePhoto && data.spouse.has_spouse) {
         const formData = new FormData();
-        formData.append("file", wifePhoto);
+        formData.append("file", spousePhoto);
         const uploadResult = await uploadPhoto(formData);
-        if (uploadResult.success) wifePhotoPath = uploadResult.path || null;
+        if (uploadResult.success) spousePhotoPath = uploadResult.path || null;
       }
 
-      const result = await submitPersonForm(data, husbandPhotoPath, wifePhotoPath);
+      const result = await submitPersonForm(data, primaryPhotoPath, spousePhotoPath);
       
       if (result.success) {
         toast.dismiss();
@@ -184,8 +193,6 @@ export function MultiStepForm() {
     }
   };
 
-  const hasWife = form.watch("wife.has_wife");
-
   return (
     <Card className="w-full max-w-3xl mx-auto bg-card border-border shadow-lg">
       <CardHeader className="p-4 md:p-6">
@@ -196,8 +203,8 @@ export function MultiStepForm() {
           </span>
         </div>
         <CardDescription className="text-xs md:text-base">
-          {step === 1 && "Data Pribadi (Silsilah Utama)"}
-          {step === 2 && "Data Istri (Pasangan)"}
+          {step === 1 && "Data Utama (Garis Keturunan Keluarga Besar)"}
+          {step === 2 && `Data ${spouseLabel} (Pasangan)`}
           {step === 3 && "Data Anak-Anak"}
         </CardDescription>
         
@@ -212,52 +219,99 @@ export function MultiStepForm() {
       <CardContent className="p-4 md:p-6 pt-2 md:pt-6">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
           
-          {/* STEP 1: HUSBAND DATA */}
+          {/* STEP 1: DATA UTAMA (KELUARGA BESAR) */}
           {step === 1 && (
-            <div className="space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 text-xs sm:text-sm">
+            <div className="space-y-3.5 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 text-xs sm:text-sm">
+              
+              {/* OPSI STATUS SUAMI / ISTRI */}
+              <div className="p-3 sm:p-4 rounded-xl border border-primary/30 bg-primary/5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-1.5">
+                    <span>Status dalam Pernikahan (Anggota Utama)</span>
+                    <span className="text-destructive">*</span>
+                  </Label>
+                  <span className="text-[10px] sm:text-xs font-mono uppercase bg-primary/15 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-medium">
+                    Keluarga Besar
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Tentukan peran anggota dari keluarga besar ini (apakah Suami atau Istri). Data pasangan yang bukan dari keluarga utama akan diisi pada langkah berikutnya.
+                </p>
+                
+                <div className="grid grid-cols-2 gap-2.5 sm:gap-4 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => form.setValue("primary.role", "suami")}
+                    className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-xs sm:text-sm font-medium transition-all cursor-pointer ${
+                      primaryRole === "suami"
+                        ? "border-primary bg-primary text-black font-semibold shadow-sm ring-2 ring-primary/20"
+                        : "border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Mars className={`w-4 h-4 shrink-0 ${primaryRole === "suami" ? "text-black" : "text-blue-500"}`} />
+                    <span className="truncate">Suami (Laki-laki)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => form.setValue("primary.role", "istri")}
+                    className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-xs sm:text-sm font-medium transition-all cursor-pointer ${
+                      primaryRole === "istri"
+                        ? "border-primary bg-primary text-black font-semibold shadow-sm ring-2 ring-primary/20"
+                        : "border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Venus className={`w-4 h-4 shrink-0 ${primaryRole === "istri" ? "text-black" : "text-pink-500"}`} />
+                    <span className="truncate">Istri (Perempuan)</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Foto Profil */}
               <div className="space-y-1.5">
-                <Label htmlFor="husband_photo" className="text-xs font-medium">Foto Profil</Label>
-                {husbandPhotoPreview ? (
+                <Label htmlFor="primary_photo" className="text-xs font-medium">
+                  Foto Profil {primaryLabel}
+                </Label>
+                {primaryPhotoPreview ? (
                   <div className="flex items-center gap-3 p-2.5 rounded-lg border border-border bg-background">
                     <div className="relative w-16 h-16 rounded-md overflow-hidden border border-border shrink-0 bg-muted">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img 
-                        src={husbandPhotoPreview} 
-                        alt="Preview Foto Suami" 
+                        src={primaryPhotoPreview} 
+                        alt={`Preview Foto ${primaryLabel}`} 
                         className="w-full h-full object-cover" 
                       />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-semibold truncate text-foreground">
-                          {husbandPhoto?.name || "Foto Suami Terpilih"}
+                          {primaryPhoto?.name || `Foto ${primaryLabel} Terpilih`}
                         </span>
                         <span className="bg-primary/10 text-primary border border-primary/20 text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0">
                           Siap Unggah
                         </span>
                       </div>
                       <p className="text-[11px] text-muted-foreground mt-0.5">
-                        {husbandPhoto ? `${(husbandPhoto.size / 1024).toFixed(0)} KB (terkompresi)` : "Foto terpilih"}
+                        {primaryPhoto ? `${(primaryPhoto.size / 1024).toFixed(0)} KB (terkompresi)` : "Foto terpilih"}
                       </p>
                       <div className="flex items-center gap-2 mt-1.5">
                         <label 
-                          htmlFor="husband_photo_change" 
+                          htmlFor="primary_photo_change" 
                           className="text-xs text-primary hover:underline cursor-pointer font-medium"
                         >
                           Ganti Foto
                         </label>
                         <input 
-                          id="husband_photo_change" 
+                          id="primary_photo_change" 
                           type="file" 
                           accept="image/*" 
-                          onChange={(e) => handlePhotoChange(e, "husband")} 
+                          onChange={(e) => handlePhotoChange(e, "primary")} 
                           className="hidden" 
                         />
                         <span className="text-muted-foreground text-xs">•</span>
                         <button 
                           type="button" 
-                          onClick={() => handleRemovePhoto("husband")} 
+                          onClick={() => handleRemovePhoto("primary")} 
                           className="text-xs text-destructive hover:underline font-medium"
                         >
                           Hapus
@@ -267,10 +321,10 @@ export function MultiStepForm() {
                   </div>
                 ) : (
                   <Input 
-                    id="husband_photo" 
+                    id="primary_photo" 
                     type="file" 
                     accept="image/*" 
-                    onChange={(e) => handlePhotoChange(e, "husband")} 
+                    onChange={(e) => handlePhotoChange(e, "primary")} 
                     className="bg-background text-muted-foreground file:bg-primary file:text-black file:border-0 file:rounded-md file:px-2.5 file:py-0.5 file:mr-2 file:font-semibold text-xs h-9" 
                   />
                 )}
@@ -279,24 +333,26 @@ export function MultiStepForm() {
               {/* Status Keluarga & Status Hidup */}
               <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
                 <div className="space-y-1">
-                  <Label htmlFor="husband_family_status" className="text-xs font-medium">Status Keluarga <span className="text-destructive">*</span></Label>
+                  <Label htmlFor="primary_family_status" className="text-xs font-medium">
+                    Status Keluarga <span className="text-destructive">*</span>
+                  </Label>
                   <Input 
-                    id="husband_family_status" 
-                    placeholder="Contoh: Cucu" 
-                    {...form.register("husband.family_status")} 
-                    className={`h-9 text-xs ${form.formState.errors.husband?.family_status ? "border-destructive" : ""}`} 
+                    id="primary_family_status" 
+                    placeholder="Contoh: Anak, Cucu, Cicit" 
+                    {...form.register("primary.family_status")} 
+                    className={`h-9 text-xs ${form.formState.errors.primary?.family_status ? "border-destructive" : ""}`} 
                   />
-                  {form.formState.errors.husband?.family_status && (
-                    <p className="text-[11px] text-destructive">{form.formState.errors.husband.family_status.message}</p>
+                  {form.formState.errors.primary?.family_status && (
+                    <p className="text-[11px] text-destructive">{form.formState.errors.primary.family_status.message}</p>
                   )}
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="husband_life_status" className="text-xs font-medium">Status Hidup</Label>
+                  <Label htmlFor="primary_life_status" className="text-xs font-medium">Status Hidup</Label>
                   <Select 
-                    value={form.watch("husband.life_status") || "alive"} 
-                    onValueChange={(val) => form.setValue("husband.life_status", val as "alive" | "deceased")}
+                    value={form.watch("primary.life_status") || "alive"} 
+                    onValueChange={(val) => form.setValue("primary.life_status", val as "alive" | "deceased")}
                   >
-                    <SelectTrigger id="husband_life_status" className="h-9 text-xs">
+                    <SelectTrigger id="primary_life_status" className="h-9 text-xs">
                       <SelectValue placeholder="Pilih" />
                     </SelectTrigger>
                     <SelectContent>
@@ -307,118 +363,164 @@ export function MultiStepForm() {
                 </div>
               </div>
 
+              {/* Nama Lengkap */}
               <div className="space-y-1">
-                <Label htmlFor="husband_name" className="text-xs font-medium">Nama Lengkap <span className="text-destructive">*</span></Label>
+                <Label htmlFor="primary_name" className="text-xs font-medium">
+                  Nama Lengkap {primaryLabel} <span className="text-destructive">*</span>
+                </Label>
                 <Input 
-                  id="husband_name" 
+                  id="primary_name" 
                   placeholder="Nama sesuai identitas" 
-                  {...form.register("husband.full_name")}
-                  className={`h-9 text-xs ${form.formState.errors.husband?.full_name ? "border-destructive" : ""}`}
+                  {...form.register("primary.full_name")}
+                  className={`h-9 text-xs ${form.formState.errors.primary?.full_name ? "border-destructive" : ""}`}
                 />
-                {form.formState.errors.husband?.full_name && (
-                  <p className="text-[11px] text-destructive">{form.formState.errors.husband.full_name.message}</p>
+                {form.formState.errors.primary?.full_name && (
+                  <p className="text-[11px] text-destructive">{form.formState.errors.primary.full_name.message}</p>
                 )}
               </div>
 
+              {/* Tempat & Tanggal Lahir */}
               <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
                 <div className="space-y-1">
-                  <Label htmlFor="husband_birth_place" className="text-xs font-medium">Tempat Lahir</Label>
-                  <Input id="husband_birth_place" className="h-9 text-xs" {...form.register("husband.birth_place")} />
+                  <Label htmlFor="primary_birth_place" className="text-xs font-medium">Tempat Lahir</Label>
+                  <Input id="primary_birth_place" className="h-9 text-xs" {...form.register("primary.birth_place")} />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="husband_birth_date" className="text-xs font-medium">Tanggal Lahir</Label>
-                  <Input id="husband_birth_date" type="date" className="h-9 text-xs" {...form.register("husband.birth_date")} />
+                  <Label htmlFor="primary_birth_date" className="text-xs font-medium">Tanggal Lahir</Label>
+                  <Input id="primary_birth_date" type="date" className="h-9 text-xs" {...form.register("primary.birth_date")} />
                 </div>
               </div>
 
+              {/* Pendidikan & Pekerjaan */}
               <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
                 <div className="space-y-1">
-                  <Label htmlFor="husband_education" className="text-xs font-medium">Pendidikan</Label>
-                  <Input id="husband_education" className="h-9 text-xs" {...form.register("husband.education")} />
+                  <Label htmlFor="primary_education" className="text-xs font-medium">Pendidikan</Label>
+                  <Input id="primary_education" className="h-9 text-xs" {...form.register("primary.education")} />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="husband_occupation" className="text-xs font-medium">Pekerjaan</Label>
-                  <Input id="husband_occupation" className="h-9 text-xs" {...form.register("husband.occupation")} />
+                  <Label htmlFor="primary_occupation" className="text-xs font-medium">Pekerjaan</Label>
+                  <Input id="primary_occupation" className="h-9 text-xs" {...form.register("primary.occupation")} />
                 </div>
               </div>
 
+              {/* No. Telp & Email */}
               <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
                 <div className="space-y-1">
-                  <Label htmlFor="husband_phone" className="text-xs font-medium">No. Telp/HP</Label>
-                  <Input id="husband_phone" className="h-9 text-xs" {...form.register("husband.phone")} />
+                  <Label htmlFor="primary_phone" className="text-xs font-medium">No. Telp/HP</Label>
+                  <Input id="primary_phone" className="h-9 text-xs" {...form.register("primary.phone")} />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="husband_email" className="text-xs font-medium">E-mail</Label>
-                  <Input id="husband_email" type="email" className="h-9 text-xs" {...form.register("husband.email")} />
+                  <Label htmlFor="primary_email" className="text-xs font-medium">E-mail</Label>
+                  <Input id="primary_email" type="email" className="h-9 text-xs" {...form.register("primary.email")} />
                 </div>
               </div>
 
+              {/* Alamat Rumah */}
               <div className="space-y-1">
-                <Label htmlFor="husband_address" className="text-xs font-medium">Alamat Rumah</Label>
-                <Input id="husband_address" className="h-9 text-xs" {...form.register("husband.address")} />
+                <Label htmlFor="primary_address" className="text-xs font-medium">Alamat Rumah</Label>
+                <Input id="primary_address" className="h-9 text-xs" {...form.register("primary.address")} />
+              </div>
+
+              {/* Data Orang Tua Silsilah Utama */}
+              <div className="border-t border-border pt-3 mt-1 space-y-2.5">
+                <div className="space-y-0.5">
+                  <h4 className="text-xs font-semibold text-primary">
+                    Data Orang Tua {primaryLabel} (Silsilah Utama)
+                  </h4>
+                  <p className="text-[11px] text-muted-foreground">
+                    Nama orang tua dari anggota garis keturunan keluarga besar.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="primary_parent_name" className="text-xs font-medium">Nama Orang Tua (Ayah / Ibu)</Label>
+                    <Input 
+                      id="primary_parent_name" 
+                      className="h-9 text-xs" 
+                      placeholder="Contoh: Nama Ayah / Ibu kandung" 
+                      {...form.register("primary.parent_name")} 
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="primary_parent_address" className="text-xs font-medium">Alamat Asal Orang Tua</Label>
+                    <Input 
+                      id="primary_parent_address" 
+                      className="h-9 text-xs" 
+                      placeholder="Kota atau alamat orang tua" 
+                      {...form.register("primary.parent_address")} 
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
-          {/* STEP 2: WIFE DATA */}
+          {/* STEP 2: DATA PASANGAN (BUKAN DARI KELUARGA UTAMA) */}
           {step === 2 && (
-            <div className="space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 text-xs sm:text-sm">
-              <div className="flex items-center justify-between border border-border p-3 rounded-lg bg-background">
+            <div className="space-y-3.5 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 text-xs sm:text-sm">
+              <div className="flex items-center justify-between border border-border p-3.5 rounded-xl bg-background">
                 <div className="space-y-0.5">
-                  <Label className="text-sm font-medium">Data Istri</Label>
-                  <p className="text-[11px] text-muted-foreground">Aktifkan jika memiliki data istri untuk dimasukkan.</p>
+                  <Label className="text-sm font-semibold flex items-center gap-1.5 text-foreground">
+                    <Heart className="w-4 h-4 text-primary" />
+                    <span>Data {spouseLabel} (Pasangan)</span>
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    Aktifkan jika memiliki data {spouseLabel.toLowerCase()} (pasangan yang bukan dari keluarga utama) untuk dimasukkan.
+                  </p>
                 </div>
                 <Switch 
-                  checked={hasWife}
-                  onCheckedChange={(checked) => form.setValue("wife.has_wife", checked)}
+                  checked={hasSpouse}
+                  onCheckedChange={(checked) => form.setValue("spouse.has_spouse", checked)}
                 />
               </div>
 
-              {hasWife && (
+              {hasSpouse && (
                 <div className="space-y-3 pt-2 border-t border-border">
-                  {/* Foto Profil Istri */}
+                  {/* Foto Profil Pasangan */}
                   <div className="space-y-1.5">
-                    <Label htmlFor="wife_photo" className="text-xs font-medium">Foto Profil</Label>
-                    {wifePhotoPreview ? (
+                    <Label htmlFor="spouse_photo" className="text-xs font-medium">
+                      Foto Profil {spouseLabel}
+                    </Label>
+                    {spousePhotoPreview ? (
                       <div className="flex items-center gap-3 p-2.5 rounded-lg border border-border bg-background">
                         <div className="relative w-16 h-16 rounded-md overflow-hidden border border-border shrink-0 bg-muted">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img 
-                            src={wifePhotoPreview} 
-                            alt="Preview Foto Istri" 
+                            src={spousePhotoPreview} 
+                            alt={`Preview Foto ${spouseLabel}`} 
                             className="w-full h-full object-cover" 
                           />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
                             <span className="text-xs font-semibold truncate text-foreground">
-                              {wifePhoto?.name || "Foto Istri Terpilih"}
+                              {spousePhoto?.name || `Foto ${spouseLabel} Terpilih`}
                             </span>
                             <span className="bg-primary/10 text-primary border border-primary/20 text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0">
                               Siap Unggah
                             </span>
                           </div>
                           <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {wifePhoto ? `${(wifePhoto.size / 1024).toFixed(0)} KB (terkompresi)` : "Foto terpilih"}
+                            {spousePhoto ? `${(spousePhoto.size / 1024).toFixed(0)} KB (terkompresi)` : "Foto terpilih"}
                           </p>
                           <div className="flex items-center gap-2 mt-1.5">
                             <label 
-                              htmlFor="wife_photo_change" 
+                              htmlFor="spouse_photo_change" 
                               className="text-xs text-primary hover:underline cursor-pointer font-medium"
                             >
                               Ganti Foto
                             </label>
                             <input 
-                              id="wife_photo_change" 
+                              id="spouse_photo_change" 
                               type="file" 
                               accept="image/*" 
-                              onChange={(e) => handlePhotoChange(e, "wife")} 
+                              onChange={(e) => handlePhotoChange(e, "spouse")} 
                               className="hidden" 
                             />
                             <span className="text-muted-foreground text-xs">•</span>
                             <button 
                               type="button" 
-                              onClick={() => handleRemovePhoto("wife")} 
+                              onClick={() => handleRemovePhoto("spouse")} 
                               className="text-xs text-destructive hover:underline font-medium"
                             >
                               Hapus
@@ -428,28 +530,35 @@ export function MultiStepForm() {
                       </div>
                     ) : (
                       <Input 
-                        id="wife_photo" 
+                        id="spouse_photo" 
                         type="file" 
                         accept="image/*" 
-                        onChange={(e) => handlePhotoChange(e, "wife")} 
+                        onChange={(e) => handlePhotoChange(e, "spouse")} 
                         className="bg-background text-muted-foreground file:bg-primary file:text-black file:border-0 file:rounded-md file:px-2.5 file:py-0.5 file:mr-2 file:font-semibold text-xs h-9" 
                       />
                     )}
                   </div>
 
-                  {/* Status Keluarga & Status Hidup Istri */}
+                  {/* Status Hubungan & Status Hidup */}
                   <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
                     <div className="space-y-1">
-                      <Label htmlFor="wife_family_status" className="text-xs font-medium">Status Keluarga</Label>
-                      <Input id="wife_family_status" className="h-9 text-xs" placeholder="Contoh: Cucu Menantu" {...form.register("wife.family_status")} />
+                      <Label htmlFor="spouse_family_status" className="text-xs font-medium">
+                        Status Hubungan / Menantu
+                      </Label>
+                      <Input 
+                        id="spouse_family_status" 
+                        className="h-9 text-xs" 
+                        placeholder={primaryRole === "suami" ? "Contoh: Istri Menantu / Cucu Menantu" : "Contoh: Suami Menantu / Cucu Menantu"} 
+                        {...form.register("spouse.family_status")} 
+                      />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="wife_life_status" className="text-xs font-medium">Status Hidup</Label>
+                      <Label htmlFor="spouse_life_status" className="text-xs font-medium">Status Hidup</Label>
                       <Select 
-                        value={form.watch("wife.life_status") || "alive"} 
-                        onValueChange={(val) => form.setValue("wife.life_status", val as "alive" | "deceased")}
+                        value={form.watch("spouse.life_status") || "alive"} 
+                        onValueChange={(val) => form.setValue("spouse.life_status", val as "alive" | "deceased")}
                       >
-                        <SelectTrigger id="wife_life_status" className="h-9 text-xs">
+                        <SelectTrigger id="spouse_life_status" className="h-9 text-xs">
                           <SelectValue placeholder="Pilih" />
                         </SelectTrigger>
                         <SelectContent>
@@ -460,70 +569,95 @@ export function MultiStepForm() {
                     </div>
                   </div>
 
+                  {/* Nama Lengkap Pasangan */}
                   <div className="space-y-1">
-                    <Label htmlFor="wife_name" className="text-xs font-medium">Nama Lengkap <span className="text-destructive">*</span></Label>
+                    <Label htmlFor="spouse_name" className="text-xs font-medium">
+                      Nama Lengkap {spouseLabel} <span className="text-destructive">*</span>
+                    </Label>
                     <Input 
-                      id="wife_name" 
-                      className={`h-9 text-xs ${form.formState.errors.wife?.full_name ? "border-destructive" : ""}`}
-                      {...form.register("wife.full_name")}
+                      id="spouse_name" 
+                      placeholder={`Nama lengkap ${spouseLabel.toLowerCase()} sesuai identitas`}
+                      className={`h-9 text-xs ${form.formState.errors.spouse?.full_name ? "border-destructive" : ""}`}
+                      {...form.register("spouse.full_name")}
                     />
-                    {form.formState.errors.wife?.full_name && (
-                      <p className="text-[11px] text-destructive">{form.formState.errors.wife.full_name.message}</p>
+                    {form.formState.errors.spouse?.full_name && (
+                      <p className="text-[11px] text-destructive">{form.formState.errors.spouse.full_name.message}</p>
                     )}
                   </div>
 
+                  {/* Tempat & Tanggal Lahir */}
                   <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
                     <div className="space-y-1">
-                      <Label htmlFor="wife_birth_place" className="text-xs font-medium">Tempat Lahir</Label>
-                      <Input id="wife_birth_place" className="h-9 text-xs" {...form.register("wife.birth_place")} />
+                      <Label htmlFor="spouse_birth_place" className="text-xs font-medium">Tempat Lahir</Label>
+                      <Input id="spouse_birth_place" className="h-9 text-xs" {...form.register("spouse.birth_place")} />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="wife_birth_date" className="text-xs font-medium">Tanggal Lahir</Label>
-                      <Input id="wife_birth_date" type="date" className="h-9 text-xs" {...form.register("wife.birth_date")} />
+                      <Label htmlFor="spouse_birth_date" className="text-xs font-medium">Tanggal Lahir</Label>
+                      <Input id="spouse_birth_date" type="date" className="h-9 text-xs" {...form.register("spouse.birth_date")} />
                     </div>
                   </div>
 
+                  {/* Pendidikan & Pekerjaan */}
                   <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
                     <div className="space-y-1">
-                      <Label htmlFor="wife_education" className="text-xs font-medium">Pendidikan</Label>
-                      <Input id="wife_education" className="h-9 text-xs" {...form.register("wife.education")} />
+                      <Label htmlFor="spouse_education" className="text-xs font-medium">Pendidikan</Label>
+                      <Input id="spouse_education" className="h-9 text-xs" {...form.register("spouse.education")} />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="wife_occupation" className="text-xs font-medium">Pekerjaan</Label>
-                      <Input id="wife_occupation" className="h-9 text-xs" {...form.register("wife.occupation")} />
+                      <Label htmlFor="spouse_occupation" className="text-xs font-medium">Pekerjaan</Label>
+                      <Input id="spouse_occupation" className="h-9 text-xs" {...form.register("spouse.occupation")} />
                     </div>
                   </div>
 
+                  {/* No. Telp & Email */}
                   <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
                     <div className="space-y-1">
-                      <Label htmlFor="wife_phone" className="text-xs font-medium">No. Telp/HP</Label>
-                      <Input id="wife_phone" className="h-9 text-xs" {...form.register("wife.phone")} />
+                      <Label htmlFor="spouse_phone" className="text-xs font-medium">No. Telp/HP</Label>
+                      <Input id="spouse_phone" className="h-9 text-xs" {...form.register("spouse.phone")} />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="wife_email" className="text-xs font-medium">E-mail</Label>
-                      <Input id="wife_email" type="email" className="h-9 text-xs" {...form.register("wife.email")} />
+                      <Label htmlFor="spouse_email" className="text-xs font-medium">E-mail</Label>
+                      <Input id="spouse_email" type="email" className="h-9 text-xs" {...form.register("spouse.email")} />
                     </div>
                   </div>
 
+                  {/* Alamat Rumah */}
                   <div className="space-y-1">
-                    <Label htmlFor="wife_address" className="text-xs font-medium">Alamat Rumah</Label>
-                    <Input id="wife_address" className="h-9 text-xs" {...form.register("wife.address")} />
+                    <Label htmlFor="spouse_address" className="text-xs font-medium">Alamat Rumah</Label>
+                    <Input id="spouse_address" className="h-9 text-xs" {...form.register("spouse.address")} />
                   </div>
-                  
 
-                  {/* <div className="border-t border-border pt-3 mt-1">
-                    <h4 className="text-xs font-semibold mb-2 text-primary">Data Orang Tua Istri</h4>
-                    <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
+                  {/* Data Orang Tua Pasangan (Non-Silsilah Utama) */}
+                  <div className="border-t border-border pt-3 mt-1 space-y-2.5">
+                    <div className="space-y-0.5">
+                      <h4 className="text-xs font-semibold text-primary">
+                        Data Orang Tua {spouseLabel} (Pasangan / Besan)
+                      </h4>
+                      <p className="text-[11px] text-muted-foreground">
+                        Nama orang tua dari pasangan (yang bukan dari keluarga utama).
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4">
                       <div className="space-y-1">
-                        <Label htmlFor="wife_parent_name" className="text-xs font-medium">Nama Orang Tua</Label>
-                        <Input id="wife_parent_name" className="h-9 text-xs" {...form.register("wife.parent_name")} />
+                        <Label htmlFor="spouse_parent_name" className="text-xs font-medium">Nama Orang Tua Pasangan</Label>
+                        <Input 
+                          id="spouse_parent_name" 
+                          className="h-9 text-xs" 
+                          placeholder="Contoh: Nama Ayah / Ibu mertua" 
+                          {...form.register("spouse.parent_name")} 
+                        />
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor="wife_parent_address" className="text-xs font-medium">Alamat Orang Tua</Label>
-                        <Input id="wife_parent_address" className="h-9 text-xs" {...form.register("wife.parent_address")} />
+                        <Label htmlFor="spouse_parent_address" className="text-xs font-medium">Alamat Asal Orang Tua Pasangan</Label>
+                        <Input 
+                          id="spouse_parent_address" 
+                          className="h-9 text-xs" 
+                          placeholder="Kota atau alamat orang tua pasangan" 
+                          {...form.register("spouse.parent_address")} 
+                        />
                       </div>
                     </div>
-                  </div> */}
+                  </div>
                 </div>
               )}
             </div>
@@ -534,7 +668,7 @@ export function MultiStepForm() {
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 text-xs sm:text-sm">
               <div className="space-y-3">
                 {fields.map((field, index) => (
-                  <div key={field.id} className="p-3 border border-border rounded-lg bg-background relative space-y-2.5">
+                  <div key={field.id} className="p-3.5 border border-border rounded-xl bg-background relative space-y-2.5">
                     <div className="flex justify-between items-center">
                       <h4 className="font-semibold text-primary text-xs">Data Anak ke-{index + 1}</h4>
                       <Button 
@@ -655,15 +789,37 @@ export function MultiStepForm() {
                 <p className="text-xs text-muted-foreground mt-0.5">Pastikan data sudah benar sebelum disimpan.</p>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Data yang Anda masukkan akan tersimpan dan direkap sebagai bagian dari <span className="text-foreground font-medium">Buku Induk Keluarga</span>. Pastikan seluruh informasi telah diisi dengan benar karena data ini akan digunakan untuk pencatatan silsilah keluarga.
+
+            <div className="rounded-lg bg-background p-3.5 border border-border/80 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Anggota Utama ({primaryLabel}):</span>
+                <span className="font-semibold text-foreground">{form.getValues("primary.full_name") || "-"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Status Keluarga:</span>
+                <span className="font-medium text-foreground">{form.getValues("primary.family_status") || "-"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Pasangan ({spouseLabel}):</span>
+                <span className="font-medium text-foreground">
+                  {hasSpouse ? form.getValues("spouse.full_name") || "(Belum diisi)" : "Tidak dimasukkan"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Jumlah Anak:</span>
+                <span className="font-medium text-foreground">{fields.length} Anak</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Data yang Anda masukkan akan tersimpan dan direkap sebagai bagian dari <span className="text-foreground font-medium">Buku Induk Keluarga</span>. Pastikan seluruh informasi telah diisi dengan benar untuk pencatatan silsilah keluarga.
             </p>
             <div className="flex justify-end gap-2 pt-2">
               <Button 
                 type="button" 
                 variant="ghost" 
                 onClick={() => setShowConfirmation(false)}
-                className="text-muted-foreground text-sm"
+                className="text-muted-foreground text-xs"
               >
                 Periksa Kembali
               </Button>
@@ -674,7 +830,7 @@ export function MultiStepForm() {
                   form.handleSubmit(onSubmit)();
                 }}
                 disabled={isSubmitting}
-                className="bg-secondary text-white hover:bg-secondary/85 text-sm"
+                className="bg-secondary text-white hover:bg-secondary/85 text-xs font-semibold"
               >
                 <CheckCircle2 className="w-4 h-4 mr-1.5" /> Ya, Simpan Data
               </Button>
