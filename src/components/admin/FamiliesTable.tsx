@@ -723,7 +723,9 @@ export function FamiliesTable({ families }: { families: any[] }) {
                       onValueChange={(val) => setFormData({ ...formData, husband: { ...formData.husband, life_status: val } })}
                     >
                       <SelectTrigger className="h-8 md:h-9 text-xs">
-                        <SelectValue />
+                        <SelectValue>
+                          {formData.husband.life_status === "alive" ? "Hidup" : "Meninggal"}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="alive">Hidup</SelectItem>
@@ -888,7 +890,9 @@ export function FamiliesTable({ families }: { families: any[] }) {
                           onValueChange={(val) => setFormData({ ...formData, wife: { ...formData.wife, life_status: val } })}
                         >
                           <SelectTrigger className="h-8 md:h-9 text-xs">
-                            <SelectValue />
+                            <SelectValue>
+                              {formData.wife.life_status === "alive" ? "Hidup" : "Meninggal"}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="alive">Hidup</SelectItem>
@@ -957,11 +961,13 @@ export function FamiliesTable({ families }: { families: any[] }) {
                                 onValueChange={(val) => handleChildChange(idx, "gender", val)}
                               >
                                 <SelectTrigger className="h-8 text-xs">
-                                  <SelectValue />
+                                  <SelectValue>
+                                    {child.gender === "L" ? "Laki-laki (L)" : child.gender === "P" ? "Perempuan (P)" : ""}
+                                  </SelectValue>
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="L">L</SelectItem>
-                                  <SelectItem value="P">P</SelectItem>
+                                  <SelectItem value="L">Laki-laki (L)</SelectItem>
+                                  <SelectItem value="P">Perempuan (P)</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>

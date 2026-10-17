@@ -357,7 +357,9 @@ export function MultiStepForm() {
                     onValueChange={(val) => form.setValue("primary.life_status", val as "alive" | "deceased")}
                   >
                     <SelectTrigger id="primary_life_status" className="h-9 text-xs">
-                      <SelectValue placeholder="Pilih" />
+                      <SelectValue placeholder="Pilih">
+                        {(form.watch("primary.life_status") || "alive") === "alive" ? "Hidup" : "Meninggal"}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="alive">Hidup</SelectItem>
@@ -391,7 +393,7 @@ export function MultiStepForm() {
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="primary_birth_date" className="text-xs font-medium">Tanggal Lahir</Label>
-                  <Input id="primary_birth_date" type="date" className="h-9 text-xs" {...form.register("primary.birth_date")} />
+                  <Input id="primary_birth_date" type="date" className="h-9 text-xs [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:invert cursor-pointer" {...form.register("primary.birth_date")} />
                 </div>
               </div>
 
@@ -563,7 +565,9 @@ export function MultiStepForm() {
                         onValueChange={(val) => form.setValue("spouse.life_status", val as "alive" | "deceased")}
                       >
                         <SelectTrigger id="spouse_life_status" className="h-9 text-xs">
-                          <SelectValue placeholder="Pilih" />
+                          <SelectValue placeholder="Pilih">
+                            {(form.watch("spouse.life_status") || "alive") === "alive" ? "Hidup" : "Meninggal"}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="alive">Hidup</SelectItem>
@@ -597,7 +601,7 @@ export function MultiStepForm() {
                     </div>
                     <div className="space-y-1">
                       <Label htmlFor="spouse_birth_date" className="text-xs font-medium">Tanggal Lahir</Label>
-                      <Input id="spouse_birth_date" type="date" className="h-9 text-xs" {...form.register("spouse.birth_date")} />
+                      <Input id="spouse_birth_date" type="date" className="h-9 text-xs [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:invert cursor-pointer" {...form.register("spouse.birth_date")} />
                     </div>
                   </div>
 
@@ -702,7 +706,9 @@ export function MultiStepForm() {
                           value={form.watch(`children.${index}.gender`) || ""}
                         >
                           <SelectTrigger className={`h-9 text-xs ${form.formState.errors.children?.[index]?.gender ? "border-destructive" : ""}`}>
-                            <SelectValue placeholder="L/P" />
+                            <SelectValue placeholder="L/P">
+                              {form.watch(`children.${index}.gender`) === "L" ? "Laki-laki (L)" : form.watch(`children.${index}.gender`) === "P" ? "Perempuan (P)" : ""}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="L">Laki-laki (L)</SelectItem>
@@ -719,7 +725,7 @@ export function MultiStepForm() {
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs font-medium">Tanggal Lahir</Label>
-                        <Input className="h-9 text-xs" type="date" {...form.register(`children.${index}.birth_date`)} />
+                        <Input className="h-9 text-xs [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:invert cursor-pointer" type="date" {...form.register(`children.${index}.birth_date`)} />
                       </div>
                     </div>
 

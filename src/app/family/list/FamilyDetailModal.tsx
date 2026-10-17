@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, User } from "lucide-react";
+import { X, User, Download, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PhotoPreviewModal } from "./PhotoPreviewModal";
 
 interface FamilyDetailModalProps {
   isOpen: boolean;
@@ -45,6 +46,9 @@ export function FamilyDetailModal({ isOpen, onClose, family }: FamilyDetailModal
     setTouchStartY(null);
   };
 
+  const [isPhotoPreviewOpen, setIsPhotoPreviewOpen] = useState(false);
+  const [photoPreviewIndex, setPhotoPreviewIndex] = useState(0);
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -74,6 +78,27 @@ export function FamilyDetailModal({ isOpen, onClose, family }: FamilyDetailModal
 
   const isSpouseMale = spouse?.gender === "Laki-laki" || spouse?.gender === "L";
   const spouseRoleLabel = isSpouseMale ? "Data Suami (Pasangan)" : "Data Istri (Pasangan)";
+
+  const photoPersons = [
+    {
+      label: headRoleLabel,
+      role: head?.family_status || headRoleLabel,
+      full_name: head?.full_name,
+      photo_path: head?.photo_path,
+      gender: head?.gender,
+    },
+    ...(spouse
+      ? [
+          {
+            label: spouseRoleLabel,
+            role: spouse?.family_status || spouseRoleLabel,
+            full_name: spouse?.full_name,
+            photo_path: spouse?.photo_path,
+            gender: spouse?.gender,
+          },
+        ]
+      : []),
+  ];
 
   const getPhotoUrl = (photoPath: string | null) => {
     if (!photoPath) return null;
@@ -144,30 +169,55 @@ export function FamilyDetailModal({ isOpen, onClose, family }: FamilyDetailModal
             <div className="space-y-4">
               {/* Data Anggota Utama */}
               <div>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className={`w-10 h-10 rounded-full overflow-hidden border-2 bg-muted shrink-0 flex items-center justify-center ${
-                    isHeadFemale ? "border-pink-500/40" : "border-primary/40"
-                  }`}>
-                    {getPhotoUrl(head?.photo_path) ? (
-                      <img
-                        src={getPhotoUrl(head.photo_path)!}
-                        alt={head.full_name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className={`w-full h-full flex items-center justify-center ${
-                        isHeadFemale ? "bg-pink-500/10 text-pink-400" : "bg-blue-500/10 text-blue-400"
-                      }`}>
-                        <User className="w-7 h-7" />
-                      </div>
-                    )}
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPhotoPreviewIndex(0);
+                        setIsPhotoPreviewOpen(true);
+                      }}
+                      title={head?.photo_path ? "Klik untuk preview & download foto" : "Belum ada foto"}
+                      className={`w-11 h-11 rounded-full overflow-hidden border-2 bg-muted shrink-0 flex items-center justify-center transition-transform hover:scale-105 cursor-pointer ${
+                        isHeadFemale ? "border-pink-500/40" : "border-primary/40"
+                      }`}
+                    >
+                      {getPhotoUrl(head?.photo_path) ? (
+                        <img
+                          src={getPhotoUrl(head.photo_path)!}
+                          alt={head.full_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className={`w-full h-full flex items-center justify-center ${
+                          isHeadFemale ? "bg-pink-500/10 text-pink-400" : "bg-blue-500/10 text-blue-400"
+                        }`}>
+                          <User className="w-7 h-7" />
+                        </div>
+                      )}
+                    </button>
+                    <div>
+                      <h4 className={`font-semibold text-base ${isHeadFemale ? "text-pink-400" : "text-primary"}`}>
+                        {headRoleLabel}
+                      </h4>
+                      <p className="text-xs text-muted-foreground">{head?.full_name}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className={`font-semibold text-base ${isHeadFemale ? "text-pink-400" : "text-primary"}`}>
-                      {headRoleLabel}
-                    </h4>
-                    <p className="text-xs text-muted-foreground">{head?.full_name}</p>
-                  </div>
+
+                  {head?.photo_path && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setPhotoPreviewIndex(0);
+                        setIsPhotoPreviewOpen(true);
+                      }}
+                      className="text-xs h-7 px-2.5 flex items-center gap-1.5 border-border hover:bg-muted"
+                    >
+                      <Download className="w-3 h-3 text-primary" />
+                      <span className="hidden sm:inline">Unduh</span> Foto
+                    </Button>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-sm bg-background border border-border p-3 rounded-lg md:bg-transparent md:border-transparent md:p-0">
@@ -203,30 +253,55 @@ export function FamilyDetailModal({ isOpen, onClose, family }: FamilyDetailModal
               {/* Data Pasangan */}
               {spouse && (
                 <div className="md:border-t md:border-border md:pt-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className={`w-10 h-10 rounded-full overflow-hidden border-2 bg-muted shrink-0 flex items-center justify-center ${
-                      isSpouseMale ? "border-blue-500/40" : "border-pink-500/40"
-                    }`}>
-                      {getPhotoUrl(spouse?.photo_path) ? (
-                        <img
-                          src={getPhotoUrl(spouse.photo_path)!}
-                          alt={spouse.full_name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className={`w-full h-full flex items-center justify-center ${
-                          isSpouseMale ? "bg-blue-500/10 text-blue-400" : "bg-pink-500/10 text-pink-400"
-                        }`}>
-                          <User className="w-7 h-7" />
-                        </div>
-                      )}
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPhotoPreviewIndex(1);
+                          setIsPhotoPreviewOpen(true);
+                        }}
+                        title={spouse?.photo_path ? "Klik untuk preview & download foto pasangan" : "Belum ada foto pasangan"}
+                        className={`w-11 h-11 rounded-full overflow-hidden border-2 bg-muted shrink-0 flex items-center justify-center transition-transform hover:scale-105 cursor-pointer ${
+                          isSpouseMale ? "border-blue-500/40" : "border-pink-500/40"
+                        }`}
+                      >
+                        {getPhotoUrl(spouse?.photo_path) ? (
+                          <img
+                            src={getPhotoUrl(spouse.photo_path)!}
+                            alt={spouse.full_name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className={`w-full h-full flex items-center justify-center ${
+                            isSpouseMale ? "bg-blue-500/10 text-blue-400" : "bg-pink-500/10 text-pink-400"
+                          }`}>
+                            <User className="w-7 h-7" />
+                          </div>
+                        )}
+                      </button>
+                      <div>
+                        <h4 className={`font-semibold text-base ${isSpouseMale ? "text-blue-400" : "text-pink-400"}`}>
+                          {spouseRoleLabel}
+                        </h4>
+                        <p className="text-xs text-muted-foreground">{spouse.full_name}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className={`font-semibold text-base ${isSpouseMale ? "text-blue-400" : "text-pink-400"}`}>
-                        {spouseRoleLabel}
-                      </h4>
-                      <p className="text-xs text-muted-foreground">{spouse.full_name}</p>
-                    </div>
+
+                    {spouse?.photo_path && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setPhotoPreviewIndex(1);
+                          setIsPhotoPreviewOpen(true);
+                        }}
+                        className="text-xs h-7 px-2.5 flex items-center gap-1.5 border-border hover:bg-muted"
+                      >
+                        <Download className="w-3 h-3 text-primary" />
+                        <span className="hidden sm:inline">Unduh</span> Foto
+                      </Button>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 text-sm bg-background border border-border p-3 rounded-lg md:bg-transparent md:border-transparent md:p-0">
@@ -321,6 +396,13 @@ export function FamilyDetailModal({ isOpen, onClose, family }: FamilyDetailModal
           </Button>
         </div>
       </div>
+
+      <PhotoPreviewModal
+        isOpen={isPhotoPreviewOpen}
+        onClose={() => setIsPhotoPreviewOpen(false)}
+        persons={photoPersons}
+        initialIndex={photoPreviewIndex}
+      />
     </div>,
     document.body
   );
