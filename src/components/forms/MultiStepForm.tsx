@@ -225,12 +225,12 @@ export function MultiStepForm() {
               
               {/* OPSI STATUS SUAMI / ISTRI */}
               <div className="p-3 sm:p-4 rounded-xl border border-primary/30 bg-primary/5 space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-1.5">
-                    <span>Status dalam Pernikahan (Anggota Utama)</span>
+                <div className="flex items-start sm:items-center justify-between gap-2">
+                  <Label className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-1 leading-tight pt-0.5 sm:pt-0">
+                    <span>Status Pernikahan (Anggota Utama)</span>
                     <span className="text-destructive">*</span>
                   </Label>
-                  <span className="text-[10px] sm:text-xs font-mono uppercase bg-primary/15 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-medium">
+                  <span className="text-[10px] sm:text-xs font-mono uppercase bg-primary/15 text-primary border border-primary/30 px-2.5 py-0.5 rounded-full font-semibold whitespace-nowrap shrink-0">
                     Keluarga Besar
                   </span>
                 </div>
@@ -238,31 +238,35 @@ export function MultiStepForm() {
                   Tentukan peran anggota dari keluarga besar ini (apakah Suami atau Istri). Data pasangan yang bukan dari keluarga utama akan diisi pada langkah berikutnya.
                 </p>
                 
-                <div className="grid grid-cols-2 gap-2.5 sm:gap-4 pt-1">
+                <div className="grid grid-cols-2 gap-2 sm:gap-4 pt-1">
                   <button
                     type="button"
                     onClick={() => form.setValue("primary.role", "suami")}
-                    className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-xs sm:text-sm font-medium transition-all cursor-pointer ${
+                    className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 px-2 sm:px-3 rounded-lg border text-xs sm:text-sm font-medium transition-all cursor-pointer ${
                       primaryRole === "suami"
                         ? "border-primary bg-primary text-black font-semibold shadow-sm ring-2 ring-primary/20"
                         : "border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    <Mars className={`w-4 h-4 shrink-0 ${primaryRole === "suami" ? "text-black" : "text-blue-500"}`} />
-                    <span className="truncate">Suami (Laki-laki)</span>
+                    <Mars className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${primaryRole === "suami" ? "text-black" : "text-blue-500"}`} />
+                    <span className="text-[11px] sm:text-xs whitespace-nowrap font-medium">
+                      Suami <span className="opacity-75 font-normal">(Laki-laki)</span>
+                    </span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => form.setValue("primary.role", "istri")}
-                    className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-xs sm:text-sm font-medium transition-all cursor-pointer ${
+                    className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 px-2 sm:px-3 rounded-lg border text-xs sm:text-sm font-medium transition-all cursor-pointer ${
                       primaryRole === "istri"
                         ? "border-primary bg-primary text-black font-semibold shadow-sm ring-2 ring-primary/20"
                         : "border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    <Venus className={`w-4 h-4 shrink-0 ${primaryRole === "istri" ? "text-black" : "text-pink-500"}`} />
-                    <span className="truncate">Istri (Perempuan)</span>
+                    <Venus className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${primaryRole === "istri" ? "text-black" : "text-pink-500"}`} />
+                    <span className="text-[11px] sm:text-xs whitespace-nowrap font-medium">
+                      Istri <span className="opacity-75 font-normal">(Perempuan)</span>
+                    </span>
                   </button>
                 </div>
               </div>
