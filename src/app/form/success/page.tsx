@@ -97,11 +97,11 @@ export default function SuccessPage() {
         </CardContent>
 
         <CardFooter className="flex flex-col sm:flex-row justify-center gap-3 p-4 md:p-6 pb-6 md:pb-8">
-          <Link href="/" className="w-full sm:w-auto">
+          {/* <Link href="/" className="w-full sm:w-auto">
             <Button variant="outline" className="w-full sm:w-auto border-border text-muted-foreground hover:text-foreground">
               <Home className="w-4 h-4 mr-2" /> Kembali ke Beranda
             </Button>
-          </Link>
+          </Link> */}
           <Link href="/tree" className="w-full sm:w-auto">
             <Button className="w-full sm:w-auto bg-primary text-black hover:bg-primary/85 font-semibold">
               <Network className="w-4 h-4 mr-2" /> Lihat Silsilah Keluarga
